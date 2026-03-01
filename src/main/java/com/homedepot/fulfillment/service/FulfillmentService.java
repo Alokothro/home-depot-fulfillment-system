@@ -12,6 +12,7 @@ import com.homedepot.fulfillment.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ public class FulfillmentService {
      * Generate pick list for warehouse workers.
      */
     @Transactional(readOnly = true)
-    public PickListResponse generatePickList(Long warehouseId) {
+    public PickListResponse generatePickList(@NonNull Long warehouseId) {
         logger.info("Generating pick list for warehouse ID: {}", warehouseId);
 
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
@@ -80,7 +81,7 @@ public class FulfillmentService {
     /**
      * Mark order as packed.
      */
-    public void packOrder(Long orderId) {
+    public void packOrder(@NonNull Long orderId) {
         logger.info("Packing order ID: {}", orderId);
 
         Order order = orderRepository.findById(orderId)
@@ -106,7 +107,7 @@ public class FulfillmentService {
     /**
      * Ship order with tracking information.
      */
-    public Shipment shipOrder(ShipmentRequest request) {
+    public Shipment shipOrder(@NonNull ShipmentRequest request) {
         logger.info("Shipping order ID: {} with carrier: {}", request.getOrderId(), request.getCarrier());
 
         Order order = orderRepository.findById(request.getOrderId())
@@ -142,7 +143,7 @@ public class FulfillmentService {
     /**
      * Confirm delivery.
      */
-    public void confirmDelivery(Long orderId) {
+    public void confirmDelivery(@NonNull Long orderId) {
         logger.info("Confirming delivery for order ID: {}", orderId);
 
         Order order = orderRepository.findById(orderId)
@@ -169,7 +170,7 @@ public class FulfillmentService {
     /**
      * Generate tracking number in format: HD-{warehouseId}-{orderId}-{timestamp}.
      */
-    private String generateTrackingNumber(Order order) {
+    private String generateTrackingNumber(@NonNull Order order) {
         long timestamp = System.currentTimeMillis();
         Long warehouseId = order.getWarehouse() != null ? order.getWarehouse().getWarehouseId() : 0;
 

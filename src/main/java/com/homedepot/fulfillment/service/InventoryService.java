@@ -15,6 +15,7 @@ import com.homedepot.fulfillment.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,7 @@ public class InventoryService {
      * Get inventory by warehouse.
      */
     @Transactional(readOnly = true)
-    public List<Inventory> getInventoryByWarehouse(Long warehouseId) {
+    public List<Inventory> getInventoryByWarehouse(@NonNull Long warehouseId) {
         logger.debug("Fetching inventory for warehouse ID: {}", warehouseId);
 
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
@@ -53,7 +54,7 @@ public class InventoryService {
      * Get inventory levels for a specific product.
      */
     @Transactional(readOnly = true)
-    public List<Inventory> getInventoryByProduct(Long productId) {
+    public List<Inventory> getInventoryByProduct(@NonNull Long productId) {
         logger.debug("Fetching inventory for product ID: {}", productId);
 
         Product product = productRepository.findById(productId)
@@ -65,7 +66,7 @@ public class InventoryService {
     /**
      * Restock inventory.
      */
-    public Inventory restockInventory(RestockRequest request) {
+    public Inventory restockInventory(@NonNull RestockRequest request) {
         logger.info("Restocking product ID {} at warehouse ID {} with quantity {}",
             request.getProductId(), request.getWarehouseId(), request.getQuantity());
 
@@ -130,7 +131,7 @@ public class InventoryService {
     /**
      * Transfer inventory between warehouses.
      */
-    public void transferInventory(InventoryTransferRequest request) {
+    public void transferInventory(@NonNull InventoryTransferRequest request) {
         logger.info("Transferring {} units of product ID {} from warehouse {} to warehouse {}",
             request.getQuantity(), request.getProductId(),
             request.getFromWarehouseId(), request.getToWarehouseId());
@@ -187,7 +188,7 @@ public class InventoryService {
     /**
      * Decrease inventory (internal method used by order service).
      */
-    public void decreaseInventory(Product product, Warehouse warehouse, Integer quantity) {
+    public void decreaseInventory(@NonNull Product product, @NonNull Warehouse warehouse, @NonNull Integer quantity) {
         logger.debug("Decreasing inventory for product {} at warehouse {} by {}",
             product.getSku(), warehouse.getName(), quantity);
 
@@ -213,7 +214,7 @@ public class InventoryService {
     /**
      * Increase inventory (internal method used for order cancellation).
      */
-    public void increaseInventory(Product product, Warehouse warehouse, Integer quantity) {
+    public void increaseInventory(@NonNull Product product, @NonNull Warehouse warehouse, @NonNull Integer quantity) {
         logger.debug("Increasing inventory for product {} at warehouse {} by {}",
             product.getSku(), warehouse.getName(), quantity);
 

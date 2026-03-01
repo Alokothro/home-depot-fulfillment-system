@@ -9,6 +9,7 @@ import com.homedepot.fulfillment.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +42,7 @@ public class ProductService {
      * Get product by ID.
      */
     @Transactional(readOnly = true)
-    public Product getProductById(Long id) {
+    public Product getProductById(@NonNull Long id) {
         logger.debug("Fetching product with ID: {}", id);
         return productRepository.findById(id)
             .orElseThrow(() -> new ProductNotFoundException(id));
@@ -51,7 +52,7 @@ public class ProductService {
      * Get product by SKU.
      */
     @Transactional(readOnly = true)
-    public Product getProductBySku(String sku) {
+    public Product getProductBySku(@NonNull String sku) {
         logger.debug("Fetching product with SKU: {}", sku);
         return productRepository.findBySku(sku)
             .orElseThrow(() -> new ProductNotFoundException("Product not found with SKU: " + sku));
@@ -61,7 +62,7 @@ public class ProductService {
      * Search products by name.
      */
     @Transactional(readOnly = true)
-    public List<Product> searchProductsByName(String name) {
+    public List<Product> searchProductsByName(@NonNull String name) {
         logger.debug("Searching products with name containing: {}", name);
         return productRepository.findByNameContainingIgnoreCase(name);
     }
@@ -70,7 +71,7 @@ public class ProductService {
      * Get products by category.
      */
     @Transactional(readOnly = true)
-    public List<Product> getProductsByCategory(String category) {
+    public List<Product> getProductsByCategory(@NonNull String category) {
         logger.debug("Fetching products in category: {}", category);
         return productRepository.findByCategory(category);
     }
@@ -78,7 +79,7 @@ public class ProductService {
     /**
      * Create new product.
      */
-    public Product createProduct(Product product) {
+    public Product createProduct(@NonNull Product product) {
         logger.info("Creating new product with SKU: {}", product.getSku());
 
         if (productRepository.existsBySku(product.getSku())) {
@@ -93,7 +94,7 @@ public class ProductService {
     /**
      * Update existing product.
      */
-    public Product updateProduct(Long id, Product productDetails) {
+    public Product updateProduct(@NonNull Long id, @NonNull Product productDetails) {
         logger.info("Updating product with ID: {}", id);
 
         Product product = getProductById(id);
@@ -116,7 +117,7 @@ public class ProductService {
     /**
      * Delete product.
      */
-    public void deleteProduct(Long id) {
+    public void deleteProduct(@NonNull Long id) {
         logger.info("Deleting product with ID: {}", id);
 
         Product product = getProductById(id);
@@ -129,7 +130,7 @@ public class ProductService {
      * Get product availability across all warehouses.
      */
     @Transactional(readOnly = true)
-    public ProductAvailabilityResponse getProductAvailability(Long productId) {
+    public ProductAvailabilityResponse getProductAvailability(@NonNull Long productId) {
         logger.debug("Fetching availability for product ID: {}", productId);
 
         Product product = getProductById(productId);

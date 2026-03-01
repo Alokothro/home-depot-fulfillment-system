@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,14 +32,14 @@ public class CustomerController {
 
     @Operation(summary = "Get customer by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<Customer> getCustomerById(@PathVariable @NonNull Long id) {
         return ResponseEntity.ok(customerRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Customer not found")));
     }
 
     @Operation(summary = "Create new customer")
     @PostMapping
-    public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
+    public ResponseEntity<Customer> createCustomer(@Valid @RequestBody @NonNull Customer customer) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(customerRepository.save(customer));
     }

@@ -13,12 +13,14 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +62,7 @@ public class OrderService {
      * Get order by ID.
      */
     @Transactional(readOnly = true)
-    public Order getOrderById(Long id) {
+    public Order getOrderById(@NonNull Long id) {
         logger.debug("Fetching order with ID: {}", id);
         return orderRepository.findById(id)
             .orElseThrow(() -> new OrderNotFoundException(id));
@@ -70,7 +72,7 @@ public class OrderService {
      * Get orders by customer ID.
      */
     @Transactional(readOnly = true)
-    public List<Order> getOrdersByCustomerId(Long customerId) {
+    public List<Order> getOrdersByCustomerId(@NonNull Long customerId) {
         logger.debug("Fetching orders for customer ID: {}", customerId);
         return orderRepository.findByCustomerCustomerIdOrderByOrderDateDesc(customerId);
     }
@@ -78,7 +80,7 @@ public class OrderService {
     /**
      * Create new order.
      */
-    public OrderResponse createOrder(OrderRequest request) {
+    public OrderResponse createOrder(@NonNull OrderRequest request) {
         logger.info("Creating new order for customer ID: {}", request.getCustomerId());
 
         // Validate customer
@@ -127,7 +129,11 @@ public class OrderService {
 
         // Reserve inventory
         for (OrderItem item : order.getOrderItems()) {
-            inventoryService.decreaseInventory(item.getProduct(), assignedWarehouse, item.getQuantity());
+            inventoryService.decreaseInventory(
+                Objects.requireNonNull(item.getProduct()),
+                Objects.requireNonNull(assignedWarehouse),
+                Objects.requireNonNull(item.getQuantity())
+            );
         }
 
         // Save order
@@ -140,7 +146,7 @@ public class OrderService {
     /**
      * Update order status.
      */
-    public OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus) {
+    public OrderResponse updateOrderStatus(@NonNull Long orderId, @NonNull OrderStatus newStatus) {
         logger.info("Updating order {} status to {}", orderId, newStatus);
 
         Order order = getOrderById(orderId);
@@ -159,7 +165,7 @@ public class OrderService {
     /**
      * Cancel order.
      */
-    public void cancelOrder(Long orderId) {
+    public void cancelOrder(@NonNull Long orderId) {
         logger.info("Cancelling order ID: {}", orderId);
 
         Order order = getOrderById(orderId);
@@ -174,9 +180,9 @@ public class OrderService {
         // Return inventory to warehouse
         for (OrderItem item : order.getOrderItems()) {
             inventoryService.increaseInventory(
-                item.getProduct(),
-                order.getWarehouse(),
-                item.getQuantity()
+                Objects.requireNonNull(item.getProduct()),
+                Objects.requireNonNull(order.getWarehouse()),
+                Objects.requireNonNull(item.getQuantity())
             );
         }
 
@@ -190,7 +196,7 @@ public class OrderService {
      * Find warehouse for order based on inventory availability.
      * Simplified logic - in production, would use geolocation for nearest warehouse.
      */
-    private Warehouse findWarehouseForOrder(Order order) {
+    private Warehouse findWarehouseForOrder(@NonNull Order order) {
         logger.debug("Finding warehouse for order");
 
         // Get all warehouses with capacity
@@ -232,7 +238,7 @@ public class OrderService {
     /**
      * Validate order status transition.
      */
-    private void validateStatusTransition(OrderStatus current, OrderStatus next) {
+    private void validateStatusTransition(@NonNull OrderStatus current, @NonNull OrderStatus next) {
         // Simplified validation - can be expanded with state machine pattern
         if (current == OrderStatus.CANCELLED || current == OrderStatus.DELIVERED) {
             throw new InvalidOrderStatusException(
@@ -250,7 +256,7 @@ public class OrderService {
     /**
      * Map Order entity to OrderResponse DTO.
      */
-    private OrderResponse mapToOrderResponse(Order order) {
+    private OrderResponse mapToOrderResponse(@NonNull Order order) {
         List<OrderResponse.OrderItemResponse> items = order.getOrderItems().stream()
             .map(item -> OrderResponse.OrderItemResponse.builder()
                 .orderItemId(item.getOrderItemId())

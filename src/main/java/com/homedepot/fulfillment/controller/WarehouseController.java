@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class WarehouseController {
 
     @Operation(summary = "Get warehouse by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Warehouse> getWarehouseById(@PathVariable Long id) {
+    public ResponseEntity<Warehouse> getWarehouseById(@PathVariable @NonNull Long id) {
         return ResponseEntity.ok(warehouseRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Warehouse not found")));
     }
