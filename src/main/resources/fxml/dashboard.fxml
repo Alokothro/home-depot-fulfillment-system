@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.web.WebView?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.homedepot.fulfillment.ui.DashboardController">
+
+    <!-- Header -->
+    <top>
+        <VBox styleClass="header">
+            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-content">
+                <Label text="🏠" styleClass="header-icon">
+                    <font>
+                        <Font size="36"/>
+                    </font>
+                </Label>
+                <VBox>
+                    <Label text="Home Depot Order Fulfillment System" styleClass="header-title">
+                        <font>
+                            <Font name="System Bold" size="24"/>
+                        </font>
+                    </Label>
+                    <Label text="Production-Ready Order Management &amp; Warehouse Operations"
+                           styleClass="header-subtitle">
+                        <font>
+                            <Font size="13"/>
+                        </font>
+                    </Label>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="statusLabel" text="● Server Running" styleClass="status-label">
+                    <font>
+                        <Font size="13"/>
+                    </font>
+                </Label>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Main Content -->
+    <center>
+        <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE">
+
+            <!-- Dashboard Tab -->
+            <Tab text="📊 Dashboard">
+                <ScrollPane fitToWidth="true" fitToHeight="true">
+                    <VBox spacing="20" styleClass="dashboard-content">
+                        <padding>
+                            <Insets top="30" right="30" bottom="30" left="30"/>
+                        </padding>
+
+                        <Label text="Quick Access" styleClass="section-title">
+                            <font>
+                                <Font name="System Bold" size="20"/>
+                            </font>
+                        </Label>
+
+                        <GridPane hgap="20" vgap="20">
+                            <!-- Row 1 -->
+                            <VBox styleClass="card" onMouseClicked="#openProducts" GridPane.columnIndex="0"
+                                  GridPane.rowIndex="0">
+                                <Label text="📦" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="Products" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="Manage product catalog with SKU tracking"
+                                       styleClass="card-description" wrapText="true"/>
+                            </VBox>
+
+                            <VBox styleClass="card" onMouseClicked="#openOrders" GridPane.columnIndex="1"
+                                  GridPane.rowIndex="0">
+                                <Label text="🛒" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="Orders" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="Track and manage customer orders" styleClass="card-description"
+                                       wrapText="true"/>
+                            </VBox>
+
+                            <VBox styleClass="card" onMouseClicked="#openInventory" GridPane.columnIndex="2"
+                                  GridPane.rowIndex="0">
+                                <Label text="📊" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="Inventory Alerts" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="Monitor low stock levels" styleClass="card-description"
+                                       wrapText="true"/>
+                            </VBox>
+
+                            <!-- Row 2 -->
+                            <VBox styleClass="card" onMouseClicked="#openWarehouses" GridPane.columnIndex="0"
+                                  GridPane.rowIndex="1">
+                                <Label text="🏭" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="Warehouses" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="View and manage warehouse locations" styleClass="card-description"
+                                       wrapText="true"/>
+                            </VBox>
+
+                            <VBox styleClass="card" onMouseClicked="#openCustomers" GridPane.columnIndex="1"
+                                  GridPane.rowIndex="1">
+                                <Label text="👥" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="Customers" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="Manage customer information" styleClass="card-description"
+                                       wrapText="true"/>
+                            </VBox>
+
+                            <VBox styleClass="card" onMouseClicked="#openSwagger" GridPane.columnIndex="2"
+                                  GridPane.rowIndex="1">
+                                <Label text="📚" styleClass="card-icon">
+                                    <font>
+                                        <Font size="40"/>
+                                    </font>
+                                </Label>
+                                <Label text="API Documentation" styleClass="card-title">
+                                    <font>
+                                        <Font name="System Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Label text="Interactive Swagger UI" styleClass="card-description"
+                                       wrapText="true"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- Swagger API Tab -->
+            <Tab text="📚 API Documentation">
+                <WebView fx:id="swaggerWebView"/>
+            </Tab>
+
+            <!-- Database Console Tab -->
+            <Tab text="🗄️ Database Console">
+                <WebView fx:id="h2WebView"/>
+            </Tab>
+
+            <!-- Products Tab -->
+            <Tab text="📦 Products">
+                <WebView fx:id="productsWebView"/>
+            </Tab>
+
+            <!-- Orders Tab -->
+            <Tab text="🛒 Orders">
+                <WebView fx:id="ordersWebView"/>
+            </Tab>
+
+            <!-- Inventory Tab -->
+            <Tab text="📊 Inventory">
+                <WebView fx:id="inventoryWebView"/>
+            </Tab>
+
+        </TabPane>
+    </center>
+
+    <!-- Status Bar -->
+    <bottom>
+        <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="20">
+            <Label text="Server: http://localhost:8080" styleClass="status-text"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Home Depot Order Fulfillment System v1.0.0" styleClass="status-text"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

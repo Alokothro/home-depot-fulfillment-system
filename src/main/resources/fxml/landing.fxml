@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.homedepot.fulfillment.ui.LandingController"
+           styleClass="landing-root">
+
+    <VBox alignment="CENTER" spacing="40">
+        <padding>
+            <Insets top="100" right="50" bottom="100" left="50"/>
+        </padding>
+
+        <!-- Logo/Title -->
+        <VBox alignment="CENTER" spacing="15">
+            <ImageView fitWidth="200" fitHeight="200" preserveRatio="true">
+                <image>
+                    <javafx.scene.image.Image url="@/images/homedepot-logo.png"/>
+                </image>
+            </ImageView>
+            <Label text="Order Fulfillment System" styleClass="landing-subtitle">
+                <font>
+                    <Font size="24"/>
+                </font>
+            </Label>
+        </VBox>
+
+        <!-- Buttons -->
+        <VBox alignment="CENTER" spacing="20" maxWidth="400">
+            <Button text="ASSOCIATE" onAction="#onAssociateClick"
+                    styleClass="landing-button" prefHeight="80" maxWidth="Infinity">
+                <font>
+                    <Font name="System Bold" size="24"/>
+                </font>
+            </Button>
+
+            <Button text="CUSTOMER" onAction="#onCustomerClick"
+                    styleClass="landing-button-secondary" prefHeight="80" maxWidth="Infinity">
+                <font>
+                    <Font name="System Bold" size="24"/>
+                </font>
+            </Button>
+        </VBox>
+
+        <!-- Footer -->
+        <Label text="Select your role to continue" styleClass="landing-footer">
+            <font>
+                <Font size="16"/>
+            </font>
+        </Label>
+    </VBox>
+
+</StackPane>

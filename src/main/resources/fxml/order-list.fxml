@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.homedepot.fulfillment.ui.OrderListController"
+            styleClass="warehouse-root">
+
+    <!-- Header -->
+    <top>
+        <VBox styleClass="warehouse-header">
+            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="warehouse-header-content">
+                <Label text="5:45 PM" styleClass="warehouse-time">
+                    <font>
+                        <Font name="System Bold" size="16"/>
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="●" styleClass="warehouse-status-dot"/>
+                <Label text="☰" styleClass="warehouse-menu-icon">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <Button text="START PICKING" styleClass="warehouse-start-button"
+                    maxWidth="Infinity" prefHeight="50">
+                <font>
+                    <Font name="System Bold" size="18"/>
+                </font>
+            </Button>
+        </VBox>
+    </top>
+
+    <!-- Main Content -->
+    <center>
+        <VBox styleClass="warehouse-content">
+            <!-- Available Orders Section -->
+            <Label text="Available Orders" styleClass="warehouse-section-header">
+                <font>
+                    <Font name="System Bold" size="18"/>
+                </font>
+                <padding>
+                    <Insets top="15" right="15" bottom="10" left="15"/>
+                </padding>
+            </Label>
+
+            <!-- Order List -->
+            <ScrollPane fitToWidth="true" styleClass="warehouse-scroll">
+                <VBox fx:id="orderListContainer" spacing="0" styleClass="warehouse-order-list">
+                    <!-- Orders will be dynamically loaded here -->
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </center>
+
+</BorderPane>
