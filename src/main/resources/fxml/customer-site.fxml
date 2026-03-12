@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.homedepot.fulfillment.ui.CustomerSiteController"
+            prefHeight="900.0" prefWidth="1400.0"
+            styleClass="customer-root">
+
+    <!-- Top Bar with Back Button -->
+    <top>
+        <HBox styleClass="customer-header" spacing="20" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="15" right="30" bottom="15" left="30"/>
+            </padding>
+            <Label text="←" styleClass="warehouse-back-button" onMouseClicked="#onBackClick"/>
+            <Label text="Customer Shopping Portal" styleClass="customer-title"/>
+        </HBox>
+    </top>
+
+    <!-- Web View for Customer Website -->
+    <center>
+        <WebView fx:id="webView" prefHeight="900.0" prefWidth="1400.0"/>
+    </center>
+
+</BorderPane>

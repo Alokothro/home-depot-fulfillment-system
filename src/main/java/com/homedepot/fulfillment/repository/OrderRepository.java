@@ -34,6 +34,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByOrderStatus(OrderStatus status);
 
     /**
+     * Find orders by multiple statuses.
+     */
+    List<Order> findByOrderStatusIn(List<OrderStatus> statuses);
+
+    /**
      * Find orders by warehouse.
      */
     List<Order> findByWarehouse(Warehouse warehouse);

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Home Depot - Order Fulfillment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-top">
+            <div class="container">
+                <div class="logo">
+                    <img src="images/homedepot-logo.png" alt="The Home Depot" class="logo-img">
+                </div>
+
+                <div class="search-container">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="search-input"
+                        placeholder="What can we help you find today?"
+                    >
+                    <button class="search-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="header-actions">
+                    <button class="cart-btn" id="cartBtn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Navigation -->
+        <nav class="nav-bar">
+            <div class="container">
+                <button class="dept-btn active" data-dept="all">All Departments</button>
+                <button class="dept-btn" data-dept="Garden Center">Garden Center</button>
+                <button class="dept-btn" data-dept="Tools & Hardware">Tools & Hardware</button>
+                <button class="dept-btn" data-dept="Paint">Paint</button>
+                <button class="dept-btn" data-dept="Electrical">Electrical</button>
+                <button class="dept-btn" data-dept="Plumbing, Kitchen & Bath">Plumbing</button>
+                <button class="dept-btn" data-dept="Flooring">Flooring</button>
+                <button class="dept-btn" data-dept="Lumber & Building Materials">Lumber</button>
+                <button class="dept-btn" data-dept="Doors & Windows">Doors & Windows</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Active Filters -->
+            <div id="activeFilters" class="active-filters"></div>
+
+            <!-- Results Count -->
+            <div class="results-header">
+                <h2 id="resultsCount">Loading products...</h2>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="productGrid" class="product-grid">
+                <!-- Products will be loaded here dynamically -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Shopping Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Shopping Cart</h2>
+                <button class="close-btn" id="closeCart">&times;</button>
+            </div>
+            <div id="cartItems" class="cart-items">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

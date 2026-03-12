@@ -227,6 +227,16 @@
     -fx-background-color: #f97316;
 }
 
+.warehouse-back-button {
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-padding: 0 10 0 0;
+}
+
+.warehouse-back-button:hover {
+    -fx-text-fill: #fed7aa;
+}
+
 .warehouse-time {
     -fx-text-fill: white;
 }
@@ -342,4 +352,21 @@
 .warehouse-badge-inprogress {
     -fx-background-color: #dbeafe;
     -fx-text-fill: #1e40af;
+}
+
+/* Customer Portal Styles */
+.customer-root {
+    -fx-background-color: #ffffff;
+}
+
+.customer-header {
+    -fx-background-color: linear-gradient(to right, #f97316, #ea580c);
+    -fx-padding: 15 30;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);
+}
+
+.customer-title {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 20;
 }

@@ -53,6 +53,9 @@ public class Product {
     @Column(length = 100)
     private String warehouseLocation;
 
+    @Column(length = 100)
+    private String department; // e.g., "Garden Center", "Electrical", "Paint", etc.
+
     @DecimalMin(value = "0.0", message = "Weight cannot be negative")
     @Column(precision = 10, scale = 2)
     private BigDecimal weight; // in pounds

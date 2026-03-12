@@ -1,8 +1,10 @@
 package com.homedepot.fulfillment.controller;
 
+import com.homedepot.fulfillment.dto.BatchOrderResponse;
 import com.homedepot.fulfillment.dto.PickListResponse;
 import com.homedepot.fulfillment.dto.ShipmentRequest;
 import com.homedepot.fulfillment.entity.Shipment;
+import com.homedepot.fulfillment.service.BatchOrderService;
 import com.homedepot.fulfillment.service.FulfillmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for Fulfillment operations.
@@ -21,6 +25,13 @@ import org.springframework.web.bind.annotation.*;
 public class FulfillmentController {
 
     private final FulfillmentService fulfillmentService;
+    private final BatchOrderService batchOrderService;
+
+    @Operation(summary = "Get batched orders for picking", description = "Returns orders grouped by department when 4+ customers need items from same department")
+    @GetMapping("/batched-orders")
+    public ResponseEntity<List<BatchOrderResponse>> getBatchedOrders() {
+        return ResponseEntity.ok(batchOrderService.getBatchedOrders());
+    }
 
     @Operation(summary = "Generate pick list for warehouse")
     @GetMapping("/pick-list/{warehouseId}")

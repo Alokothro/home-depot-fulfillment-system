@@ -13,7 +13,12 @@
     <top>
         <VBox styleClass="warehouse-header">
             <HBox alignment="CENTER_LEFT" spacing="15" styleClass="warehouse-header-content">
-                <Label text="5:45 PM" styleClass="warehouse-time">
+                <Label text="←" styleClass="warehouse-back-button" onMouseClicked="#onBackClick">
+                    <font>
+                        <Font size="24"/>
+                    </font>
+                </Label>
+                <Label fx:id="timeLabel" text="5:45 PM" styleClass="warehouse-time">
                     <font>
                         <Font name="System Bold" size="16"/>
                     </font>

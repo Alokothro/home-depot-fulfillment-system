@@ -37,8 +37,23 @@ public class LandingController {
 
     @FXML
     private void onCustomerClick(ActionEvent event) {
-        // TODO: Implement customer view
-        System.out.println("Customer view not yet implemented");
+        try {
+            // Load the customer site view (embedded WebView)
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/customer-site.fxml"));
+            Parent root = loader.load();
+
+            // Get the current stage and switch scenes
+            Stage stage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(root, 1400, 900);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setScene(scene);
+            stage.setTitle("Home Depot - Customer Portal");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Failed to load Customer view: " + e.getMessage());
+        }
     }
 
     private void showError(String message) {
