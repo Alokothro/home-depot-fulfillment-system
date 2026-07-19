@@ -219,14 +219,35 @@ body {
 }
 
 .product-image {
+    position: relative;
     width: 100%;
     height: 220px;
     background-color: var(--hd-gray-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
     color: var(--hd-orange);
+    overflow: hidden;
+}
+
+.product-image-fallback {
+    font-size: 48px;
+}
+
+.product-photo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-photo.loaded {
+    opacity: 1;
+    background-color: var(--hd-white);
 }
 
 .product-info {

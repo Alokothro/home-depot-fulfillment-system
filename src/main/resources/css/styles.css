@@ -370,3 +370,122 @@
     -fx-font-weight: bold;
     -fx-font-size: 20;
 }
+
+/* ==================== PICKING SCREEN ==================== */
+.pick-subheader {
+    -fx-padding: 0 15 12 15;
+    -fx-background-color: #f97316;
+}
+
+.pick-subheader-text {
+    -fx-text-fill: rgba(255, 255, 255, 0.95);
+    -fx-font-size: 14;
+}
+
+.pick-scan-bar {
+    -fx-background-color: white;
+    -fx-padding: 14 15;
+    -fx-spacing: 6;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 0 0 1 0;
+}
+
+.pick-scan-field {
+    -fx-font-size: 16;
+    -fx-padding: 10 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 2;
+}
+
+.pick-scan-field:focused {
+    -fx-border-color: #f97316;
+}
+
+.pick-scan-button {
+    -fx-background-color: #f97316;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 10 16;
+}
+
+.pick-scan-button:hover {
+    -fx-background-color: #ea580c;
+}
+
+.pick-scan-feedback {
+    -fx-font-size: 13;
+}
+
+.pick-scan-ok {
+    -fx-text-fill: #15803d;
+    -fx-font-weight: bold;
+}
+
+.pick-scan-err {
+    -fx-text-fill: #dc2626;
+    -fx-font-weight: bold;
+}
+
+.pick-item-card {
+    -fx-background-color: white;
+    -fx-padding: 14;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 0 0 1 0;
+}
+
+.pick-item-done {
+    -fx-background-color: #f0fdf4;
+}
+
+.pick-item-button {
+    -fx-background-color: #f97316;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 16;
+}
+
+.pick-item-button:hover {
+    -fx-background-color: #ea580c;
+}
+
+.pick-item-button:disabled {
+    -fx-background-color: #86efac;
+    -fx-text-fill: white;
+    -fx-opacity: 1;
+}
+
+.pick-badge-done {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #15803d;
+}
+
+.pick-footer {
+    -fx-padding: 12 15;
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1 0 0 0;
+}
+
+.pick-complete-button {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.pick-complete-button:hover {
+    -fx-background-color: #15803d;
+}
+
+.pick-complete-button:disabled {
+    -fx-background-color: #d1d5db;
+    -fx-text-fill: #9ca3af;
+    -fx-opacity: 1;
+    -fx-cursor: default;
+}

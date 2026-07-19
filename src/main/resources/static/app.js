@@ -75,25 +75,19 @@ function setupEventListeners() {
     });
 }
 
-// Search Handler with debounce
+// Search Handler with a light debounce (filtering itself is instant)
 function handleSearch(e) {
     const query = e.target.value.toLowerCase().trim();
 
-    // Clear previous timeout
     if (state.searchTimeout) {
         clearTimeout(state.searchTimeout);
     }
 
-    // Show loading immediately if there's a query
-    if (query) {
-        showLoading();
-    }
-
-    // Debounce search - wait 300ms after user stops typing
+    // Short debounce just to coalesce fast typing; no artificial delay
     state.searchTimeout = setTimeout(() => {
         state.searchQuery = query;
         applyFilters();
-    }, 300);
+    }, 120);
 }
 
 // Department Filter Handler
@@ -110,35 +104,30 @@ function handleDepartmentClick(e) {
     applyFilters();
 }
 
-// Apply Filters with loading delay
+// Apply Filters synchronously (no artificial delay)
 function applyFilters() {
-    // Show loading state
-    showLoading();
+    let filtered = state.products;
 
-    // Simulate loading delay for better UX (500ms)
-    setTimeout(() => {
-        let filtered = [...state.products];
+    // Department filter
+    if (state.activeDepartment !== 'all') {
+        filtered = filtered.filter(p => p.department === state.activeDepartment);
+    }
 
-        // Department filter
-        if (state.activeDepartment !== 'all') {
-            filtered = filtered.filter(p => p.department === state.activeDepartment);
-        }
+    // Search filter
+    if (state.searchQuery) {
+        const q = state.searchQuery;
+        filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q) ||
+            p.sku.toLowerCase().includes(q)
+        );
+    }
 
-        // Search filter
-        if (state.searchQuery) {
-            filtered = filtered.filter(p =>
-                p.name.toLowerCase().includes(state.searchQuery) ||
-                p.description.toLowerCase().includes(state.searchQuery) ||
-                p.category.toLowerCase().includes(state.searchQuery) ||
-                p.sku.toLowerCase().includes(state.searchQuery)
-            );
-        }
-
-        state.filteredProducts = filtered;
-        state.isLoading = false;
-        renderProducts();
-        updateActiveFilters();
-    }, 500);
+    state.filteredProducts = filtered;
+    state.isLoading = false;
+    renderProducts();
+    updateActiveFilters();
 }
 
 // Show Loading State
@@ -211,7 +200,9 @@ function renderProducts() {
     grid.innerHTML = state.filteredProducts.map(product => `
         <div class="product-card">
             <div class="product-image">
-                ${getProductIcon(product.department)}
+                <span class="product-image-fallback">${getProductIcon(product.department)}</span>
+                <img class="product-photo" src="${getImageUrl(product)}" alt="${product.name}"
+                     loading="lazy" onload="this.classList.add('loaded')" onerror="this.remove()">
             </div>
             <div class="product-info">
                 <div class="product-department">${product.department}</div>
@@ -245,6 +236,12 @@ function getProductIcon(department) {
         'Doors & Windows': '🚪'
     };
     return icons[department] || '🏪';
+}
+
+// Real product photo, bundled locally so it loads instantly & works offline.
+// Images are pre-downloaded once by download-product-images.mjs (inventory is fixed).
+function getImageUrl(product) {
+    return `images/products/${product.productId}.jpg`;
 }
 
 // Cart Management
@@ -415,9 +412,19 @@ async function showLoginForm() {
     }
 }
 
+// Title-case a name so it looks clean on the associate screen no matter how it was typed.
+// Handles spaces, hyphens and apostrophes: "mary-JANE o'BRIEN" -> "Mary-Jane O'Brien".
+function normalizeName(raw) {
+    return (raw || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+        .replace(/(^|[\s'-])([a-zÀ-ɏ])/g, (m, sep, ch) => sep + ch.toUpperCase());
+}
+
 async function handleGuestSubmit() {
-    const firstName = document.getElementById('guestFirstName').value.trim();
-    const lastName = document.getElementById('guestLastName').value.trim();
+    const firstName = normalizeName(document.getElementById('guestFirstName').value);
+    const lastName = normalizeName(document.getElementById('guestLastName').value);
     const errorEl = document.getElementById('guestError');
 
     if (!firstName || !lastName) {
@@ -425,6 +432,10 @@ async function handleGuestSubmit() {
         return;
     }
     errorEl.textContent = '';
+
+    // Reflect the cleaned-up names back into the fields so the guest sees the fix too
+    document.getElementById('guestFirstName').value = firstName;
+    document.getElementById('guestLastName').value = lastName;
 
     const btn = document.getElementById('guestSubmitBtn');
     btn.disabled = true;

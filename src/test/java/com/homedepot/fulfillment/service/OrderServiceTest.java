@@ -1,9 +1,7 @@
 package com.homedepot.fulfillment.service;
 
-import com.homedepot.fulfillment.dto.OrderRequest;
 import com.homedepot.fulfillment.dto.OrderResponse;
 import com.homedepot.fulfillment.entity.*;
-import com.homedepot.fulfillment.exception.CustomerNotFoundException;
 import com.homedepot.fulfillment.exception.InvalidOrderStatusException;
 import com.homedepot.fulfillment.exception.OrderNotFoundException;
 import com.homedepot.fulfillment.repository.*;

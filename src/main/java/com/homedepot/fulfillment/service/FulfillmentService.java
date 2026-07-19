@@ -1,5 +1,6 @@
 package com.homedepot.fulfillment.service;
 
+import com.homedepot.fulfillment.dto.OrderPickListResponse;
 import com.homedepot.fulfillment.dto.PickListResponse;
 import com.homedepot.fulfillment.dto.ShipmentRequest;
 import com.homedepot.fulfillment.entity.*;
@@ -76,6 +77,42 @@ public class FulfillmentService {
 
         logger.info("Pick list generated with {} items from {} orders", items.size(), orders.size());
         return response;
+    }
+
+    /**
+     * Build the pick list for a single order (used by the associate picking screen).
+     */
+    @Transactional(readOnly = true)
+    public OrderPickListResponse getOrderPickList(@NonNull Long orderId) {
+        logger.info("Building pick list for order ID: {}", orderId);
+
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        List<OrderPickListResponse.PickLine> lines = new ArrayList<>();
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            lines.add(OrderPickListResponse.PickLine.builder()
+                .productId(product.getProductId())
+                .sku(product.getSku())
+                .productName(product.getName())
+                .department(product.getDepartment())
+                .location(product.getWarehouseLocation())
+                .quantity(item.getQuantity())
+                .build());
+        }
+
+        int totalItems = lines.stream().mapToInt(OrderPickListResponse.PickLine::getQuantity).sum();
+
+        return OrderPickListResponse.builder()
+            .orderId(order.getOrderId())
+            .orderNumber("Order #" + order.getOrderId())
+            .customerName(order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName())
+            .status(order.getOrderStatus().toString())
+            .shippingMethod(order.getShippingMethod())
+            .totalItems(totalItems)
+            .lines(lines)
+            .build();
     }
 
     /**

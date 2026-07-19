@@ -20,7 +20,6 @@ import java.io.IOException;
 public class FulfillmentDesktopApp extends Application {
 
     private ConfigurableApplicationContext springContext;
-    private Stage primaryStage;
 
     @Override
     public void init() {
@@ -36,8 +35,6 @@ public class FulfillmentDesktopApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        this.primaryStage = stage;
-
         try {
             // Load landing page FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/landing.fxml"));

@@ -296,13 +296,39 @@ public class OrderListController {
     }
 
     private void handleBatchClick(JsonNode batch) {
-        System.out.println("Clicked batch: " + batch.get("department").asText());
-        // TODO: Navigate to batch picking view showing all customers and items
+        openPicking(controller -> controller.initBatch(batch));
     }
 
     private void handleIndividualOrderClick(JsonNode order) {
-        System.out.println("Clicked order: " + order.get("orderId").asText());
-        // TODO: Navigate to order detail/picking view
+        long orderId = order.get("orderId").asLong();
+        openPicking(controller -> controller.initOrder(orderId));
+    }
+
+    /**
+     * Navigate to the picking screen and hand off to the given initializer once its controller is ready.
+     */
+    private void openPicking(java.util.function.Consumer<PickingController> initializer) {
+        try {
+            if (timeline != null) {
+                timeline.stop();
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/picking.fxml"));
+            Parent root = loader.load();
+            PickingController controller = loader.getController();
+
+            Stage stage = (Stage) orderListContainer.getScene().getWindow();
+            Scene scene = new Scene(root, 1400, 900);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setScene(scene);
+            stage.setTitle("Home Depot - Picking");
+
+            initializer.accept(controller);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Failed to open picking view: " + e.getMessage());
+        }
     }
 
     private void showError(String message) {

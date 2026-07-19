@@ -1,6 +1,7 @@
 package com.homedepot.fulfillment.controller;
 
 import com.homedepot.fulfillment.dto.BatchOrderResponse;
+import com.homedepot.fulfillment.dto.OrderPickListResponse;
 import com.homedepot.fulfillment.dto.PickListResponse;
 import com.homedepot.fulfillment.dto.ShipmentRequest;
 import com.homedepot.fulfillment.entity.Shipment;
@@ -37,6 +38,12 @@ public class FulfillmentController {
     @GetMapping("/pick-list/{warehouseId}")
     public ResponseEntity<PickListResponse> generatePickList(@PathVariable Long warehouseId) {
         return ResponseEntity.ok(fulfillmentService.generatePickList(warehouseId));
+    }
+
+    @Operation(summary = "Get pick list for a single order")
+    @GetMapping("/order/{orderId}/pick-list")
+    public ResponseEntity<OrderPickListResponse> getOrderPickList(@PathVariable Long orderId) {
+        return ResponseEntity.ok(fulfillmentService.getOrderPickList(orderId));
     }
 
     @Operation(summary = "Mark order as packed")

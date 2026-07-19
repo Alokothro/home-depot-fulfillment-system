@@ -5,7 +5,6 @@ import com.homedepot.fulfillment.entity.Inventory;
 import com.homedepot.fulfillment.entity.Product;
 import com.homedepot.fulfillment.entity.Warehouse;
 import com.homedepot.fulfillment.exception.InsufficientInventoryException;
-import com.homedepot.fulfillment.exception.ProductNotFoundException;
 import com.homedepot.fulfillment.exception.WarehouseNotFoundException;
 import com.homedepot.fulfillment.repository.InventoryRepository;
 import com.homedepot.fulfillment.repository.ProductRepository;

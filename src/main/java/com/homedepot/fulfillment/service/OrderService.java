@@ -40,7 +40,6 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
-    private final WarehouseRepository warehouseRepository;
     private final InventoryService inventoryService;
 
     @Value("${fulfillment.tax.rate:0.07}")

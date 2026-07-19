@@ -240,6 +240,14 @@ VALUES
     (13, 5, 95, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (17, 5, 220, 40, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+-- Fallback stock: ensure EVERY product is purchasable in at least one warehouse.
+-- The curated rows above only cover product ids 1-20; this stocks the rest
+-- (distributed across the 5 warehouses by id) so no product is stuck out of stock.
+INSERT INTO inventory (product_id, warehouse_id, quantity, minimum_stock_level, last_restocked, created_at, updated_at)
+SELECT p.product_id, MOD(p.product_id, 5) + 1, 200, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM products p
+WHERE NOT EXISTS (SELECT 1 FROM inventory i WHERE i.product_id = p.product_id);
+
 -- Update warehouse utilization based on inventory
 UPDATE warehouses SET current_utilization = (
     SELECT COALESCE(SUM(quantity), 0) FROM inventory WHERE warehouse_id = warehouses.warehouse_id
