@@ -19,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -123,18 +126,28 @@ public class OrderService {
 
         order.setTotalAmount(order.getSubtotal().add(order.getTax()).add(order.getShippingCost()));
 
-        // Assign to nearest warehouse with available stock
-        Warehouse assignedWarehouse = findWarehouseForOrder(order);
-        order.setWarehouse(assignedWarehouse);
+        // Reserve inventory per item from whichever warehouse has stock.
+        // The order's primary warehouse is the one supplying the most units
+        // (used for the pick-list / display); an order may be sourced from several.
+        Map<Long, Integer> unitsByWarehouse = new HashMap<>();
+        Map<Long, Warehouse> warehousesById = new HashMap<>();
 
-        // Reserve inventory
         for (OrderItem item : order.getOrderItems()) {
+            Warehouse itemWarehouse = findWarehouseForItem(item);
             inventoryService.decreaseInventory(
                 Objects.requireNonNull(item.getProduct()),
-                Objects.requireNonNull(assignedWarehouse),
+                itemWarehouse,
                 Objects.requireNonNull(item.getQuantity())
             );
+            unitsByWarehouse.merge(itemWarehouse.getWarehouseId(), item.getQuantity(), Integer::sum);
+            warehousesById.put(itemWarehouse.getWarehouseId(), itemWarehouse);
         }
+
+        Warehouse primaryWarehouse = unitsByWarehouse.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .map(e -> warehousesById.get(e.getKey()))
+            .orElseThrow(() -> new InsufficientInventoryException("No warehouse could fulfill this order"));
+        order.setWarehouse(primaryWarehouse);
 
         // Save order
         Order savedOrder = orderRepository.save(order);
@@ -193,46 +206,22 @@ public class OrderService {
     }
 
     /**
-     * Find warehouse for order based on inventory availability.
-     * Simplified logic - in production, would use geolocation for nearest warehouse.
+     * Find a warehouse that can fulfill a single order item.
+     * Picks the warehouse holding the most stock of that product, so an order can be
+     * sourced from multiple warehouses rather than requiring one to have everything.
      */
-    private Warehouse findWarehouseForOrder(@NonNull Order order) {
-        logger.debug("Finding warehouse for order");
+    private Warehouse findWarehouseForItem(@NonNull OrderItem item) {
+        List<Inventory> options = inventoryRepository.findWarehousesWithProductInStock(
+            item.getProduct().getProductId(),
+            item.getQuantity()
+        );
 
-        // Get all warehouses with capacity
-        List<Warehouse> warehouses = warehouseRepository.findWarehousesWithCapacity();
-
-        if (warehouses.isEmpty()) {
-            throw new InsufficientInventoryException("No warehouses available with capacity");
-        }
-
-        // Find warehouse that has all products in stock
-        for (Warehouse warehouse : warehouses) {
-            boolean hasAllProducts = true;
-
-            for (OrderItem item : order.getOrderItems()) {
-                List<Inventory> inventories = inventoryRepository.findWarehousesWithProductInStock(
-                    item.getProduct().getProductId(),
-                    item.getQuantity()
-                );
-
-                boolean warehouseHasProduct = inventories.stream()
-                    .anyMatch(inv -> inv.getWarehouse().getWarehouseId().equals(warehouse.getWarehouseId()));
-
-                if (!warehouseHasProduct) {
-                    hasAllProducts = false;
-                    break;
-                }
-            }
-
-            if (hasAllProducts) {
-                logger.debug("Assigned order to warehouse: {}", warehouse.getName());
-                return warehouse;
-            }
-        }
-
-        throw new InsufficientInventoryException(
-            "No warehouse found with sufficient inventory for all order items");
+        return options.stream()
+            .max(Comparator.comparingInt(Inventory::getQuantity))
+            .map(Inventory::getWarehouse)
+            .orElseThrow(() -> new InsufficientInventoryException(
+                "\"" + item.getProduct().getName() + "\" is out of stock (needed " +
+                item.getQuantity() + ")."));
     }
 
     /**

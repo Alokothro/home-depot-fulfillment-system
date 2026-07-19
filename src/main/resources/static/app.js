@@ -3,6 +3,7 @@ const state = {
     products: [],
     filteredProducts: [],
     cart: [],
+    customer: null,
     activeDepartment: 'all',
     searchQuery: '',
     searchTimeout: null,
@@ -18,8 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initializeApp() {
-    await loadProducts();
     setupEventListeners();
+    setupAuthListeners();
+    document.body.classList.add('modal-open'); // login gate shows first
+    await loadProducts();
     renderProducts();
 }
 
@@ -57,6 +60,12 @@ function setupEventListeners() {
 
     // Checkout button
     document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
+
+    // Order confirmation close
+    document.getElementById('confirmCloseBtn').addEventListener('click', () => {
+        document.getElementById('confirmModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
 
     // Close modal on background click
     document.getElementById('cartModal').addEventListener('click', (e) => {
@@ -282,6 +291,9 @@ function updateCartUI() {
     const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
     document.getElementById('cartCount').textContent = count;
 
+    const headerCount = document.getElementById('cartHeaderCount');
+    if (headerCount) headerCount.textContent = count > 0 ? `(${count})` : '';
+
     const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
 }
@@ -296,12 +308,15 @@ function showCartNotification() {
 }
 
 function openCart() {
+    hideCartError();
     document.getElementById('cartModal').classList.add('active');
+    document.body.classList.add('modal-open');
     renderCartItems();
 }
 
 function closeCart() {
     document.getElementById('cartModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
 }
 
 function renderCartItems() {
@@ -340,25 +355,224 @@ function renderCartItems() {
     `).join('');
 }
 
+// ---- Auth: guest / login gate ----
+function setupAuthListeners() {
+    document.getElementById('chooseGuestBtn').addEventListener('click', showGuestForm);
+    document.getElementById('chooseLoginBtn').addEventListener('click', showLoginForm);
+    document.getElementById('guestSubmitBtn').addEventListener('click', handleGuestSubmit);
+    document.getElementById('loginSubmitBtn').addEventListener('click', handleLoginSubmit);
+    document.getElementById('signoutBtn').addEventListener('click', signOut);
+
+    document.querySelectorAll('[data-auth-back]').forEach(btn =>
+        btn.addEventListener('click', showAuthChoice));
+
+    // Enter key submits the guest form
+    ['guestFirstName', 'guestLastName'].forEach(id =>
+        document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') handleGuestSubmit();
+        }));
+}
+
+function showAuthScreen(id) {
+    ['loginChoice', 'guestForm', 'loginForm'].forEach(screen => {
+        document.getElementById(screen).style.display = screen === id ? 'block' : 'none';
+    });
+}
+
+function showAuthChoice() {
+    showAuthScreen('loginChoice');
+}
+
+function showGuestForm() {
+    document.getElementById('guestError').textContent = '';
+    showAuthScreen('guestForm');
+    document.getElementById('guestFirstName').focus();
+}
+
+async function showLoginForm() {
+    showAuthScreen('loginForm');
+    const select = document.getElementById('loginCustomerSelect');
+    const errorEl = document.getElementById('loginError');
+    errorEl.textContent = '';
+    select.innerHTML = '<option>Loading accounts…</option>';
+
+    try {
+        const response = await fetch(`${API_BASE}/customers`);
+        if (!response.ok) throw new Error('Failed to load accounts');
+
+        const customers = await response.json();
+        if (!customers.length) {
+            select.innerHTML = '<option value="">No accounts found</option>';
+            return;
+        }
+
+        select.innerHTML = customers.map(c =>
+            `<option value="${c.customerId}" data-name="${c.firstName} ${c.lastName}">${c.firstName} ${c.lastName} — ${c.email}</option>`
+        ).join('');
+    } catch (error) {
+        select.innerHTML = '';
+        errorEl.textContent = error.message;
+    }
+}
+
+async function handleGuestSubmit() {
+    const firstName = document.getElementById('guestFirstName').value.trim();
+    const lastName = document.getElementById('guestLastName').value.trim();
+    const errorEl = document.getElementById('guestError');
+
+    if (!firstName || !lastName) {
+        errorEl.textContent = 'Please enter your first and last name.';
+        return;
+    }
+    errorEl.textContent = '';
+
+    const btn = document.getElementById('guestSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Setting up…';
+
+    try {
+        // Backend requires full contact details; fill valid placeholders for guests
+        const guest = {
+            firstName,
+            lastName,
+            email: `guest.${Date.now()}@guest.homedepot.local`,
+            addressLine1: 'In-Store',
+            city: 'Atlanta',
+            state: 'GA',
+            zipCode: '30301'
+        };
+
+        const response = await fetch(`${API_BASE}/customers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(guest)
+        });
+        if (!response.ok) throw new Error('Could not create guest profile. Please try again.');
+
+        const created = await response.json();
+        identifyCustomer(created);
+    } catch (error) {
+        errorEl.textContent = error.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start Shopping';
+    }
+}
+
+function handleLoginSubmit() {
+    const select = document.getElementById('loginCustomerSelect');
+    const option = select.options[select.selectedIndex];
+
+    if (!option || !option.value) {
+        document.getElementById('loginError').textContent = 'Please select an account.';
+        return;
+    }
+
+    const fullName = option.dataset.name || '';
+    const [firstName, ...rest] = fullName.split(' ');
+    identifyCustomer({
+        customerId: Number(option.value),
+        firstName: firstName || 'Customer',
+        lastName: rest.join(' ')
+    });
+}
+
+function identifyCustomer(customer) {
+    state.customer = customer;
+    document.getElementById('loginModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+
+    const greeting = document.getElementById('userGreeting');
+    document.getElementById('userGreetingName').textContent = `Hi, ${customer.firstName}`;
+    greeting.style.display = 'flex';
+}
+
+function signOut() {
+    state.customer = null;
+    state.cart = [];
+    updateCartUI();
+    closeCart();
+    document.getElementById('userGreeting').style.display = 'none';
+    showAuthChoice();
+    document.getElementById('loginModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
 async function handleCheckout() {
     if (state.cart.length === 0) return;
 
+    // Not signed in -> send them back through the guest/login gate
+    if (!state.customer) {
+        signOut();
+        return;
+    }
+
+    hideCartError();
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    checkoutBtn.disabled = true;
+    checkoutBtn.textContent = 'Placing order…';
+
     try {
-        // For now, just show an alert. In a real app, this would create an order
-        const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const itemCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+        const orderRequest = {
+            customerId: state.customer.customerId,
+            shippingMethod: 'Standard',
+            items: state.cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity
+            }))
+        };
 
-        alert(`Order placed successfully!\n\nItems: ${itemCount}\nTotal: $${total.toFixed(2)}\n\nOrder will be processed by the warehouse team.`);
+        const response = await fetch(`${API_BASE}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderRequest)
+        });
 
-        // Clear cart
+        if (!response.ok) {
+            let message = 'Failed to place order. Please try again.';
+            try {
+                const err = await response.json();
+                message = err.message || err.error || message;
+            } catch (_) { /* non-JSON error body */ }
+            throw new Error(message);
+        }
+
+        const order = await response.json();
+
+        // Success: clear cart, close drawer, show confirmation
         state.cart = [];
         updateCartUI();
         closeCart();
+        showOrderConfirmation(order);
 
     } catch (error) {
         console.error('Checkout error:', error);
-        alert('Failed to place order. Please try again.');
+        showCartError(error.message || 'Failed to place order. Please try again.');
+    } finally {
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'Proceed to Checkout';
     }
+}
+
+function showCartError(message) {
+    const el = document.getElementById('cartError');
+    el.textContent = message;
+    el.style.display = 'block';
+}
+
+function hideCartError() {
+    const el = document.getElementById('cartError');
+    el.textContent = '';
+    el.style.display = 'none';
+}
+
+function showOrderConfirmation(order) {
+    const total = order.totalAmount != null ? `$${Number(order.totalAmount).toFixed(2)}` : '';
+    document.getElementById('confirmDetails').innerHTML =
+        `Order <strong>#${order.orderId}</strong> for <strong>${state.customer.firstName} ${state.customer.lastName}</strong>` +
+        (total ? `<br>Total: <strong>${total}</strong>` : '');
+    document.getElementById('confirmModal').classList.add('active');
+    document.body.classList.add('modal-open');
 }
 
 // Make functions globally accessible for onclick handlers

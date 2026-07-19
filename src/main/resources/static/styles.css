@@ -509,3 +509,267 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* ---- Login / Guest Gate ---- */
+.auth-modal {
+    max-width: 440px;
+}
+
+.auth-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.auth-logo {
+    height: 40px;
+    object-fit: contain;
+}
+
+.auth-header h2 {
+    font-size: 22px;
+}
+
+.auth-body {
+    padding: 12px 28px 28px;
+}
+
+.auth-subtitle {
+    color: var(--hd-gray-dark);
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-choice-btn {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    border: 2px solid var(--hd-orange);
+    border-radius: 8px;
+    background-color: var(--hd-orange);
+    color: var(--hd-white);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.login-choice-btn:hover {
+    background-color: var(--hd-orange-dark);
+    border-color: var(--hd-orange-dark);
+}
+
+.login-choice-btn.secondary {
+    background-color: var(--hd-white);
+    color: var(--hd-text-dark);
+    border-color: var(--hd-gray-medium);
+}
+
+.login-choice-btn.secondary:hover {
+    border-color: var(--hd-orange);
+}
+
+.login-choice-title {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.login-choice-sub {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.auth-field {
+    margin-bottom: 16px;
+}
+
+.auth-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hd-gray-dark);
+    margin-bottom: 6px;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 2px solid var(--hd-gray-medium);
+    border-radius: 6px;
+    background-color: var(--hd-white);
+    color: var(--hd-text-dark);
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--hd-orange);
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--hd-white);
+    background-color: var(--hd-orange);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.auth-submit-btn:hover {
+    background-color: var(--hd-orange-dark);
+}
+
+.auth-submit-btn:disabled {
+    background-color: var(--hd-gray-medium);
+    cursor: not-allowed;
+}
+
+.auth-error {
+    color: #c0392b;
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 10px;
+}
+
+.link-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: none;
+    border: none;
+    color: var(--hd-gray-dark);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.link-btn:hover {
+    color: var(--hd-orange);
+}
+
+/* ---- Header greeting / sign out ---- */
+.user-greeting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--hd-white);
+}
+
+.user-greeting span {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.signout-btn {
+    background-color: transparent;
+    border: 2px solid var(--hd-white);
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: var(--hd-white);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.signout-btn:hover {
+    background-color: var(--hd-white);
+    color: var(--hd-orange);
+}
+
+/* ---- Cart drawer + scroll behavior ---- */
+/* Lock the page behind any open modal so the wheel doesn't scroll the product grid */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Slide the cart in from the right as a full-height drawer */
+.cart-modal {
+    justify-content: flex-end;
+    align-items: stretch;
+}
+
+.cart-drawer {
+    width: 420px;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
+    animation: slideInRight 0.25s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+/* Keep scrolling contained to the cart list; don't chain to the page */
+.cart-drawer .cart-items {
+    flex: 1;
+    overscroll-behavior: contain;
+}
+
+.cart-header-count {
+    color: var(--hd-gray-dark);
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.cart-footer {
+    border-top: 1px solid var(--hd-gray-medium);
+}
+
+.cart-error {
+    background-color: #fdecea;
+    color: #b71c1c;
+    border: 1px solid #f5c6c2;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+/* ---- Order confirmation ---- */
+.confirm-modal {
+    max-width: 380px;
+    text-align: center;
+    padding: 36px 28px 28px;
+    align-items: center;
+}
+
+.confirm-check {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background-color: #2e7d32;
+    color: #fff;
+    font-size: 34px;
+    line-height: 64px;
+}
+
+.confirm-modal h2 {
+    color: var(--hd-text-dark);
+    margin-bottom: 12px;
+}
+
+.confirm-details {
+    font-size: 16px;
+    color: var(--hd-text-dark);
+    margin-bottom: 8px;
+}
+
+.confirm-sub {
+    font-size: 14px;
+    color: var(--hd-gray-dark);
+    margin-bottom: 24px;
+}
