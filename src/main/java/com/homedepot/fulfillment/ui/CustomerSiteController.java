@@ -1,5 +1,7 @@
 package com.homedepot.fulfillment.ui;
 
+import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -13,29 +15,55 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/**
- * Controller for the customer shopping portal (embedded web view).
- */
 public class CustomerSiteController {
 
     private static final String CUSTOMER_SITE_URL = "http://localhost:8080/index.html";
-    private static final int MAX_RETRIES = 30;
-    private static final int RETRY_DELAY_MS = 1000;
+    private static final int    MAX_RETRIES       = 30;
+    private static final int    RETRY_DELAY_MS    = 1000;
 
-    @FXML
-    private WebView webView;
+    @FXML private WebView webView;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @FXML
     public void initialize() {
-        // Wait for Spring Boot server, then load the customer website
-        waitForServer().thenRun(() -> javafx.application.Platform.runLater(this::loadWebsite));
+        // JS → Java channel: intercept alert() calls to save/clear session
+        webView.getEngine().setOnAlert(event -> {
+            String data = event.getData();
+            if (data != null && data.startsWith("__session__:")) {
+                // Format: __session__:customerId:firstName:lastName
+                String[] parts = data.split(":", 4);
+                if (parts.length == 4) {
+                    try {
+                        CustomerSession.set(Long.parseLong(parts[1]), parts[2], parts[3]);
+                    } catch (NumberFormatException ignored) {}
+                }
+            } else if ("__clear_session__".equals(data)) {
+                CustomerSession.clear();
+            }
+            // All other alert() calls: silently drop (we use in-DOM UI instead)
+        });
+
+        // Java → JS channel: restore session after page finishes loading
+        webView.getEngine().getLoadWorker().stateProperty().addListener((obs, old, state) -> {
+            if (state == Worker.State.SUCCEEDED && CustomerSession.hasSession()) {
+                Platform.runLater(() -> {
+                    String js = String.format(
+                        "if(typeof restoreSession==='function') restoreSession(%d,'%s','%s');",
+                        CustomerSession.getCustomerId(),
+                        escapeJs(CustomerSession.getFirstName()),
+                        escapeJs(CustomerSession.getLastName())
+                    );
+                    webView.getEngine().executeScript(js);
+                });
+            }
+        });
+
+        waitForServer().thenRun(() -> Platform.runLater(this::loadWebsite));
     }
 
     private void loadWebsite() {
         try {
-            // Cache-bust so the WebView always picks up the latest CSS/JS after a restart
             String url = CUSTOMER_SITE_URL + "?v=" + System.currentTimeMillis();
             webView.getEngine().load(url);
         } catch (Exception e) {
@@ -47,15 +75,11 @@ public class CustomerSiteController {
     @FXML
     private void onBackClick(MouseEvent event) {
         try {
-            // Load the landing page
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/landing.fxml"));
             Parent root = loader.load();
-
-            // Get the current stage and switch scenes
             Stage stage = (Stage) webView.getScene().getWindow();
             stage.getScene().setRoot(root);
             stage.setTitle("Home Depot Order Fulfillment System");
-
         } catch (IOException e) {
             e.printStackTrace();
             showError("Failed to return to landing page: " + e.getMessage());
@@ -71,31 +95,18 @@ public class CustomerSiteController {
                             .GET()
                             .timeout(java.time.Duration.ofSeconds(2))
                             .build();
-
-                    HttpResponse<String> response = httpClient.send(request,
-                            HttpResponse.BodyHandlers.ofString());
-
-                    if (response.statusCode() == 200) {
-                        System.out.println("Spring Boot server is ready!");
+                    if (httpClient.send(request, HttpResponse.BodyHandlers.ofString()).statusCode() == 200)
                         return;
-                    }
-                } catch (Exception e) {
-                    // Server not ready yet
-                }
-
-                try {
-                    Thread.sleep(RETRY_DELAY_MS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+                } catch (Exception ignored) {}
+                try { Thread.sleep(RETRY_DELAY_MS); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
             }
-
-            // If we get here, server didn't start
-            javafx.application.Platform.runLater(() ->
-                showError("Spring Boot server failed to start after " + MAX_RETRIES + " seconds")
-            );
+            Platform.runLater(() -> showError("Spring Boot server failed to start"));
         });
+    }
+
+    private String escapeJs(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private void showError(String message) {

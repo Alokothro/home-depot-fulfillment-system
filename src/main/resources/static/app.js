@@ -499,9 +499,18 @@ function identifyCustomer(customer) {
     document.getElementById('loginModal').classList.remove('active');
     document.body.classList.remove('modal-open');
 
-    const greeting = document.getElementById('userGreeting');
     document.getElementById('userGreetingName').textContent = `Hi, ${customer.firstName}`;
-    greeting.style.display = 'flex';
+    document.getElementById('userGreeting').style.display = 'flex';
+
+    // Signal Java to persist the session across associate ↔ customer navigation
+    try { alert(`__session__:${customer.customerId}:${customer.firstName}:${customer.lastName}`); }
+    catch (_) {}
+}
+
+// Called by Java when returning to the customer page with an active session.
+// Skips the login modal entirely.
+function restoreSession(customerId, firstName, lastName) {
+    identifyCustomer({ customerId, firstName, lastName });
 }
 
 function signOut() {
@@ -513,6 +522,9 @@ function signOut() {
     showAuthChoice();
     document.getElementById('loginModal').classList.add('active');
     document.body.classList.add('modal-open');
+
+    // Signal Java to clear the persisted session
+    try { alert('__clear_session__'); } catch (_) {}
 }
 
 // ---- Big-item detection (drives Van Delivery eligibility) ----
