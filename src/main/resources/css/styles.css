@@ -212,147 +212,170 @@
     -fx-text-fill: #9ca3af;
 }
 
-/* ==================== WAREHOUSE ORDER UI ==================== */
-.warehouse-root {
-    -fx-background-color: #e5e7eb;
+/* ==================== ASSOCIATE DASHBOARD ==================== */
+.associate-root {
+    -fx-background-color: #f1f5f9;
 }
 
-.warehouse-header {
-    -fx-background-color: #f97316;
-    -fx-padding: 0;
+/* Dark header */
+.associate-header {
+    -fx-background-color: linear-gradient(to right, #111827, #1e293b);
+    -fx-padding: 18 24;
 }
 
-.warehouse-header-content {
-    -fx-padding: 12 15;
-    -fx-background-color: #f97316;
-}
-
-.warehouse-back-button {
+.associate-back {
     -fx-text-fill: white;
     -fx-cursor: hand;
-    -fx-padding: 0 10 0 0;
+    -fx-font-size: 20px;
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
 }
 
-.warehouse-back-button:hover {
-    -fx-text-fill: #fed7aa;
+.associate-back:hover {
+    -fx-background-color: rgba(255,255,255,0.2);
 }
 
-.warehouse-time {
-    -fx-text-fill: white;
-}
-
-.warehouse-status-dot {
-    -fx-text-fill: white;
-    -fx-font-size: 16;
-}
-
-.warehouse-menu-icon {
-    -fx-text-fill: white;
-}
-
-.warehouse-start-button {
-    -fx-background-color: #f97316;
-    -fx-text-fill: white;
-    -fx-background-radius: 0;
-    -fx-border-color: transparent;
-    -fx-cursor: hand;
-    -fx-padding: 15 20;
-}
-
-.warehouse-start-button:hover {
-    -fx-background-color: #ea580c;
-}
-
-.warehouse-start-button:pressed {
-    -fx-background-color: #c2410c;
-}
-
-.warehouse-content {
-    -fx-background-color: #e5e7eb;
-}
-
-.warehouse-section-header {
-    -fx-background-color: #d1d5db;
-    -fx-text-fill: #1f2937;
+.associate-header-eyebrow {
+    -fx-text-fill: #f97316;
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 
-.warehouse-scroll {
+.associate-header-title {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.associate-time {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.associate-date {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+/* Stats bar */
+.associate-stats-bar {
+    -fx-background-color: #0f172a;
+    -fx-padding: 10 24;
+}
+
+.associate-stats-text {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+}
+
+.associate-refresh-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f97316;
+    -fx-border-color: #f97316;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 14;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.associate-refresh-btn:hover {
+    -fx-background-color: rgba(249,115,22,0.12);
+}
+
+/* Scroll + grid */
+.associate-scroll {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
 
-.warehouse-scroll .viewport {
-    -fx-background-color: #e5e7eb;
+.associate-scroll .viewport {
+    -fx-background-color: #f1f5f9;
 }
 
-.warehouse-order-list {
-    -fx-background-color: #e5e7eb;
-    -fx-spacing: 0;
+.associate-order-grid {
+    -fx-background-color: #f1f5f9;
 }
 
-/* Order Card */
-.warehouse-order-card {
+/* ── Order cards (oc-*) ── */
+.oc-card {
     -fx-background-color: white;
-    -fx-padding: 15;
-    -fx-border-color: #d1d5db;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.09), 14, 0, 0, 3);
     -fx-cursor: hand;
 }
 
-.warehouse-order-card:hover {
-    -fx-background-color: #f9fafb;
+.oc-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 22, 0, 0, 6);
 }
 
-.warehouse-order-name {
-    -fx-text-fill: #1f2937;
+.oc-avatar {
+    -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 18;
+    -fx-font-size: 15px;
+    -fx-background-radius: 50;
+    -fx-alignment: center;
+    -fx-pref-width: 44;
+    -fx-pref-height: 44;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
 }
 
-.warehouse-order-number {
-    -fx-text-fill: #6b7280;
-    -fx-font-size: 14;
-}
-
-.warehouse-order-info {
-    -fx-text-fill: #6b7280;
-    -fx-font-size: 14;
-}
-
-.warehouse-order-due {
-    -fx-text-fill: #6b7280;
-    -fx-font-size: 14;
-}
-
-.warehouse-order-due-urgent {
-    -fx-text-fill: #dc2626;
+.oc-name {
+    -fx-text-fill: #0f172a;
     -fx-font-weight: bold;
+    -fx-font-size: 16px;
 }
 
-.warehouse-badge {
-    -fx-background-color: #fef3c7;
-    -fx-text-fill: #92400e;
-    -fx-background-radius: 12;
-    -fx-padding: 3 10;
-    -fx-font-size: 12;
+.oc-ordnum {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+.oc-pick-btn {
+    -fx-background-color: #f97316;
+    -fx-text-fill: white;
+    -fx-background-radius: 7;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 9 20;
+    -fx-cursor: hand;
 }
 
-.warehouse-badge-priority {
-    -fx-background-color: #fee2e2;
-    -fx-text-fill: #991b1b;
+.oc-pick-btn:hover {
+    -fx-background-color: #ea580c;
 }
 
-.warehouse-badge-partial {
-    -fx-background-color: #fef3c7;
-    -fx-text-fill: #92400e;
+.oc-pick-btn:pressed {
+    -fx-background-color: #c2410c;
 }
 
-.warehouse-badge-inprogress {
-    -fx-background-color: #dbeafe;
-    -fx-text-fill: #1e40af;
-}
+/* Keep warehouse-* styles for the picking screen (picking.fxml still uses them) */
+.warehouse-root      { -fx-background-color: #e5e7eb; }
+.warehouse-header    { -fx-background-color: #f97316; -fx-padding: 0; }
+.warehouse-header-content { -fx-padding: 12 15; -fx-background-color: #f97316; }
+.warehouse-back-button { -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 0 10 0 0; }
+.warehouse-back-button:hover { -fx-text-fill: #fed7aa; }
+.warehouse-time      { -fx-text-fill: white; }
+.warehouse-content   { -fx-background-color: #e5e7eb; }
+.warehouse-section-header { -fx-background-color: #d1d5db; -fx-text-fill: #1f2937; -fx-font-weight: bold; }
+.warehouse-scroll    { -fx-background-color: transparent; -fx-border-color: transparent; }
+.warehouse-scroll .viewport { -fx-background-color: #e5e7eb; }
+.warehouse-order-list { -fx-background-color: #e5e7eb; -fx-spacing: 0; }
+.warehouse-order-card { -fx-background-color: white; -fx-padding: 15; -fx-border-color: #d1d5db; -fx-border-width: 0 0 1 0; -fx-cursor: hand; }
+.warehouse-order-card:hover { -fx-background-color: #f9fafb; }
+.warehouse-order-name { -fx-text-fill: #1f2937; -fx-font-weight: bold; -fx-font-size: 18; }
+.warehouse-order-number { -fx-text-fill: #6b7280; -fx-font-size: 14; }
+.warehouse-order-info { -fx-text-fill: #6b7280; -fx-font-size: 14; }
+.warehouse-order-due { -fx-text-fill: #6b7280; -fx-font-size: 14; }
+.warehouse-order-due-urgent { -fx-text-fill: #dc2626; -fx-font-weight: bold; }
+.warehouse-badge { -fx-background-color: #fef3c7; -fx-text-fill: #92400e; -fx-background-radius: 12; -fx-padding: 3 10; -fx-font-size: 12; -fx-font-weight: bold; }
+.warehouse-badge-priority { -fx-background-color: #fee2e2; -fx-text-fill: #991b1b; }
+.warehouse-badge-partial { -fx-background-color: #fef3c7; -fx-text-fill: #92400e; }
+.warehouse-badge-inprogress { -fx-background-color: #dbeafe; -fx-text-fill: #1e40af; }
 
 /* Customer Portal Styles */
 .customer-root {
@@ -372,115 +395,109 @@
 }
 
 /* ==================== PICKING SCREEN ==================== */
-.pick-subheader {
-    -fx-padding: 0 15 12 15;
+.pick-order-id {
+    -fx-text-fill: #f97316;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.pick-customer-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+.pick-progress-counter {
+    -fx-text-fill: white;
+}
+
+/* Thin progress bar under the header */
+.pick-progress-bar {
+    -fx-accent: #f97316;
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-pref-height: 5;
+}
+
+.pick-progress-bar > .bar {
     -fx-background-color: #f97316;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
 }
 
-.pick-subheader-text {
-    -fx-text-fill: rgba(255, 255, 255, 0.95);
-    -fx-font-size: 14;
+.pick-progress-bar > .track {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 0;
 }
 
+/* Scan bar */
 .pick-scan-bar {
     -fx-background-color: white;
-    -fx-padding: 14 15;
-    -fx-spacing: 6;
-    -fx-border-color: #d1d5db;
+    -fx-padding: 14 16;
+    -fx-border-color: #e2e8f0;
     -fx-border-width: 0 0 1 0;
 }
 
 .pick-scan-field {
-    -fx-font-size: 16;
-    -fx-padding: 10 12;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
-    -fx-border-color: #d1d5db;
+    -fx-font-size: 15px;
+    -fx-padding: 11 14;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #e2e8f0;
     -fx-border-width: 2;
+    -fx-background-color: #f8fafc;
 }
 
 .pick-scan-field:focused {
     -fx-border-color: #f97316;
+    -fx-background-color: white;
 }
 
 .pick-scan-button {
     -fx-background-color: #f97316;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 6;
+    -fx-font-size: 14px;
+    -fx-background-radius: 8;
     -fx-cursor: hand;
-    -fx-padding: 10 16;
+    -fx-padding: 11 16;
 }
 
-.pick-scan-button:hover {
-    -fx-background-color: #ea580c;
+.pick-scan-button:hover { -fx-background-color: #ea580c; }
+
+.pick-scan-feedback  { -fx-font-size: 13px; -fx-min-height: 18; }
+.pick-scan-ok        { -fx-text-fill: #15803d; -fx-font-weight: bold; }
+.pick-scan-err       { -fx-text-fill: #dc2626; -fx-font-weight: bold; }
+
+/* Item list area */
+.pick-items-list {
+    -fx-background-color: #f1f5f9;
 }
 
-.pick-scan-feedback {
-    -fx-font-size: 13;
-}
-
-.pick-scan-ok {
-    -fx-text-fill: #15803d;
-    -fx-font-weight: bold;
-}
-
-.pick-scan-err {
-    -fx-text-fill: #dc2626;
-    -fx-font-weight: bold;
-}
-
-.pick-item-card {
-    -fx-background-color: white;
-    -fx-padding: 14;
-    -fx-border-color: #d1d5db;
-    -fx-border-width: 0 0 1 0;
-}
-
-.pick-item-done {
-    -fx-background-color: #f0fdf4;
-}
-
-.pick-item-button {
-    -fx-background-color: #f97316;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 6;
+/* Card (HBox: strip + body) */
+.pick-card {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);
+    -fx-background-radius: 10;
     -fx-cursor: hand;
-    -fx-padding: 6 16;
 }
 
-.pick-item-button:hover {
-    -fx-background-color: #ea580c;
+.pick-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 18, 0, 0, 4);
 }
 
-.pick-item-button:disabled {
-    -fx-background-color: #86efac;
-    -fx-text-fill: white;
-    -fx-opacity: 1;
-}
-
-.pick-badge-done {
-    -fx-background-color: #dcfce7;
-    -fx-text-fill: #15803d;
-}
-
+/* Footer */
 .pick-footer {
-    -fx-padding: 12 15;
+    -fx-padding: 12 16;
     -fx-background-color: white;
-    -fx-border-color: #d1d5db;
+    -fx-border-color: #e2e8f0;
     -fx-border-width: 1 0 0 0;
 }
 
 .pick-complete-button {
-    -fx-background-color: #16a34a;
-    -fx-text-fill: white;
+    -fx-background-color: #d1d5db;
+    -fx-text-fill: #9ca3af;
     -fx-background-radius: 8;
-    -fx-cursor: hand;
-}
-
-.pick-complete-button:hover {
-    -fx-background-color: #15803d;
+    -fx-cursor: default;
 }
 
 .pick-complete-button:disabled {

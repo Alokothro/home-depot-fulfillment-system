@@ -46,6 +46,13 @@ public class FulfillmentController {
         return ResponseEntity.ok(fulfillmentService.getOrderPickList(orderId));
     }
 
+    @Operation(summary = "Mark order as partially fulfilled (shortage)")
+    @PutMapping("/partial/{orderId}")
+    public ResponseEntity<Void> markPartial(@PathVariable Long orderId) {
+        fulfillmentService.markPartial(orderId);
+        return ResponseEntity.ok().build();
+    }
+
     @Operation(summary = "Mark order as packed")
     @PutMapping("/pack/{orderId}")
     public ResponseEntity<Void> packOrder(@PathVariable Long orderId) {

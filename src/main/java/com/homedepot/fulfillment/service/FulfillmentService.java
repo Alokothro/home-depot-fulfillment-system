@@ -106,13 +106,34 @@ public class FulfillmentService {
 
         return OrderPickListResponse.builder()
             .orderId(order.getOrderId())
-            .orderNumber("Order #" + order.getOrderId())
+            .orderNumber(String.format("HD-%s-%05d",
+                    order.getOrderDate() != null
+                        ? order.getOrderDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                        : java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")),
+                    order.getOrderId()))
             .customerName(order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName())
             .status(order.getOrderStatus().toString())
             .shippingMethod(order.getShippingMethod())
             .totalItems(totalItems)
             .lines(lines)
             .build();
+    }
+
+    /**
+     * Mark order as partially fulfilled (associate picked what was available; shortage remains).
+     */
+    public void markPartial(@NonNull Long orderId) {
+        logger.info("Marking order {} as partial", orderId);
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if (order.getOrderStatus() == OrderStatus.PENDING
+                || order.getOrderStatus() == OrderStatus.PROCESSING) {
+            order.setOrderStatus(OrderStatus.PARTIAL);
+            orderRepository.save(order);
+            logger.info("Order {} marked as PARTIAL", orderId);
+        }
+        // Already PARTIAL or beyond — no-op
     }
 
     /**

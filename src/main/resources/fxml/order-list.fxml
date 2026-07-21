@@ -7,60 +7,46 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.homedepot.fulfillment.ui.OrderListController"
-            styleClass="warehouse-root">
+            styleClass="associate-root">
 
-    <!-- Header -->
     <top>
-        <VBox styleClass="warehouse-header">
-            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="warehouse-header-content">
-                <Label text="←" styleClass="warehouse-back-button" onMouseClicked="#onBackClick">
-                    <font>
-                        <Font size="24"/>
-                    </font>
+        <VBox>
+            <!-- Dark header -->
+            <HBox alignment="CENTER_LEFT" spacing="18" styleClass="associate-header">
+                <Label text="&#8592;" styleClass="associate-back" onMouseClicked="#onBackClick">
+                    <font><Font size="20"/></font>
                 </Label>
-                <Label fx:id="timeLabel" text="5:45 PM" styleClass="warehouse-time">
-                    <font>
-                        <Font name="System Bold" size="16"/>
-                    </font>
-                </Label>
+                <VBox spacing="1">
+                    <Label text="HOME DEPOT" styleClass="associate-header-eyebrow"/>
+                    <Label text="Store Fulfillment" styleClass="associate-header-title">
+                        <font><Font name="System Bold" size="22"/></font>
+                    </Label>
+                </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="●" styleClass="warehouse-status-dot"/>
-                <Label text="☰" styleClass="warehouse-menu-icon">
-                    <font>
-                        <Font size="20"/>
-                    </font>
-                </Label>
+                <VBox alignment="CENTER_RIGHT" spacing="2">
+                    <Label fx:id="timeLabel" text="" styleClass="associate-time">
+                        <font><Font name="System Bold" size="20"/></font>
+                    </Label>
+                    <Label fx:id="dateLabel" text="" styleClass="associate-date"/>
+                </VBox>
             </HBox>
 
-            <Button text="START PICKING" styleClass="warehouse-start-button"
-                    maxWidth="Infinity" prefHeight="50">
-                <font>
-                    <Font name="System Bold" size="18"/>
-                </font>
-            </Button>
+            <!-- Stats + action bar -->
+            <HBox alignment="CENTER_LEFT" spacing="16" styleClass="associate-stats-bar">
+                <Label fx:id="statsLabel" text="Loading orders..." styleClass="associate-stats-text"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Refresh" styleClass="associate-refresh-btn" onAction="#onRefresh"/>
+            </HBox>
         </VBox>
     </top>
 
-    <!-- Main Content -->
     <center>
-        <VBox styleClass="warehouse-content">
-            <!-- Available Orders Section -->
-            <Label text="Available Orders" styleClass="warehouse-section-header">
-                <font>
-                    <Font name="System Bold" size="18"/>
-                </font>
-                <padding>
-                    <Insets top="15" right="15" bottom="10" left="15"/>
-                </padding>
-            </Label>
-
-            <!-- Order List -->
-            <ScrollPane fitToWidth="true" styleClass="warehouse-scroll">
-                <VBox fx:id="orderListContainer" spacing="0" styleClass="warehouse-order-list">
-                    <!-- Orders will be dynamically loaded here -->
-                </VBox>
-            </ScrollPane>
-        </VBox>
+        <ScrollPane fx:id="mainScroll" fitToWidth="true" styleClass="associate-scroll" hbarPolicy="NEVER">
+            <FlowPane fx:id="orderGrid" hgap="16" vgap="16"
+                      alignment="TOP_LEFT" styleClass="associate-order-grid">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+            </FlowPane>
+        </ScrollPane>
     </center>
 
 </BorderPane>

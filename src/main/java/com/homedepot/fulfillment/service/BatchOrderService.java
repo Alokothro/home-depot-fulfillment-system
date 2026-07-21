@@ -38,7 +38,7 @@ public class BatchOrderService {
 
         // Get all pending and processing orders
         List<Order> pendingOrders = orderRepository.findByOrderStatusIn(
-                Arrays.asList(OrderStatus.PENDING, OrderStatus.PROCESSING)
+                Arrays.asList(OrderStatus.PENDING, OrderStatus.PROCESSING, OrderStatus.PARTIAL)
         );
 
         if (pendingOrders.isEmpty()) {
@@ -173,16 +173,25 @@ public class BatchOrderService {
 
         int totalItems = items.stream().mapToInt(OrderItem::getQuantity).sum();
 
+        // Format: HD-YYYYMMDD-NNNNN — unique, scannable, lookup-able
+        String orderDate = order.getOrderDate() != null
+                ? order.getOrderDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String orderNumber = String.format("HD-%s-%05d", orderDate, order.getOrderId());
+
+        String orderDateIso = order.getOrderDate() != null ? order.getOrderDate().toString() : null;
+
         return BatchOrderResponse.builder()
                 .isBatched(false)
                 .orderId(order.getOrderId())
                 .customerName(customerName)
-                .orderNumber("Order #" + order.getOrderId())
+                .orderNumber(orderNumber)
                 .shippingMethod(order.getShippingMethod())
                 .status(order.getOrderStatus().toString())
                 .dueDate(formatDueDate(order.getOrderDate()))
                 .department(primaryDepartment)
                 .totalItems(totalItems)
+                .orderDateIso(orderDateIso)
                 .build();
     }
 

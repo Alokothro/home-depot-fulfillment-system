@@ -32,6 +32,7 @@ public class BatchOrderResponse {
     private String shippingMethod;
     private String status;
     private String dueDate;
+    private String orderDateIso; // ISO-8601, used by the UI for BOPIS countdown
 
     @Data
     @Builder

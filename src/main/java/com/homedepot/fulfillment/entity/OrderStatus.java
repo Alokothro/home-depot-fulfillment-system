@@ -5,8 +5,9 @@ package com.homedepot.fulfillment.entity;
  */
 public enum OrderStatus {
     PENDING,      // Order created, awaiting processing
-    PROCESSING,   // Order being prepared for shipment
-    PACKED,       // Order packed and ready to ship
+    PROCESSING,   // Order currently being picked
+    PARTIAL,      // Associate picked what was available; shortage noted
+    PACKED,       // All items picked and packed
     SHIPPED,      // Order shipped to customer
     DELIVERED,    // Order delivered to customer
     CANCELLED     // Order cancelled

@@ -7,64 +7,64 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.homedepot.fulfillment.ui.PickingController"
-            styleClass="warehouse-root">
+            styleClass="associate-root">
 
-    <!-- Header -->
     <top>
-        <VBox styleClass="warehouse-header">
-            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="warehouse-header-content">
-                <Label text="←" styleClass="warehouse-back-button" onMouseClicked="#onBackClick">
-                    <font>
-                        <Font size="24"/>
-                    </font>
+        <VBox>
+            <!-- Dark header matching order list -->
+            <HBox alignment="CENTER_LEFT" spacing="18" styleClass="associate-header">
+                <Label text="&#8592;" styleClass="associate-back" onMouseClicked="#onBackClick">
+                    <font><Font size="20"/></font>
                 </Label>
-                <Label fx:id="orderTitleLabel" text="Order" styleClass="warehouse-time">
-                    <font>
-                        <Font name="System Bold" size="18"/>
-                    </font>
-                </Label>
+                <VBox spacing="3">
+                    <Label fx:id="orderTitleLabel" text="" styleClass="pick-order-id"/>
+                    <Label fx:id="customerLabel"   text="" styleClass="pick-customer-label"/>
+                </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="progressLabel" text="0 / 0 picked" styleClass="warehouse-time">
-                    <font>
-                        <Font name="System Bold" size="16"/>
-                    </font>
+                <Label fx:id="progressLabel" text="0 / 0 picked" styleClass="pick-progress-counter">
+                    <font><Font name="System Bold" size="18"/></font>
                 </Label>
             </HBox>
 
-            <HBox alignment="CENTER_LEFT" styleClass="pick-subheader">
-                <Label fx:id="customerLabel" text="" styleClass="pick-subheader-text"/>
-            </HBox>
+            <!-- Thin progress bar -->
+            <ProgressBar fx:id="progressBar" progress="0.0"
+                         maxWidth="Infinity" prefHeight="5"
+                         styleClass="pick-progress-bar"/>
         </VBox>
     </top>
 
-    <!-- Main Content -->
     <center>
         <VBox>
             <!-- Scan bar -->
-            <VBox styleClass="pick-scan-bar">
+            <VBox styleClass="pick-scan-bar" spacing="6">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <TextField fx:id="scanField" promptText="Scan or type a SKU, then press Enter"
-                               styleClass="pick-scan-field" HBox.hgrow="ALWAYS" onAction="#onScan"/>
-                    <Button text="Scan" styleClass="pick-scan-button" onAction="#onScan" prefWidth="90"/>
+                    <TextField fx:id="scanField"
+                               promptText="Scan barcode or type SKU, then press Enter"
+                               styleClass="pick-scan-field" onAction="#onScan"
+                               HBox.hgrow="ALWAYS"/>
+                    <Button text="Scan" styleClass="pick-scan-button" onAction="#onScan" prefWidth="88"/>
                 </HBox>
                 <Label fx:id="scanFeedback" text="" styleClass="pick-scan-feedback" wrapText="true"/>
             </VBox>
 
-            <!-- Pick item list -->
-            <ScrollPane fitToWidth="true" styleClass="warehouse-scroll" VBox.vgrow="ALWAYS">
-                <VBox fx:id="pickItemsContainer" spacing="0" styleClass="warehouse-order-list"/>
+            <!-- Item cards -->
+            <ScrollPane fitToWidth="true" styleClass="associate-scroll"
+                        hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                <VBox fx:id="pickItemsContainer" spacing="12" styleClass="pick-items-list">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                </VBox>
             </ScrollPane>
         </VBox>
     </center>
 
-    <!-- Footer -->
     <bottom>
         <VBox styleClass="pick-footer">
-            <Button fx:id="completeButton" text="COMPLETE PICK &amp; PACK" styleClass="pick-complete-button"
-                    maxWidth="Infinity" prefHeight="56" onAction="#onComplete" disable="true">
-                <font>
-                    <Font name="System Bold" size="18"/>
-                </font>
+            <Button fx:id="completeButton"
+                    text="Complete Pick &amp; Pack"
+                    styleClass="pick-complete-button"
+                    maxWidth="Infinity" prefHeight="54"
+                    onAction="#onComplete" disable="true">
+                <font><Font name="System Bold" size="16"/></font>
             </Button>
         </VBox>
     </bottom>
