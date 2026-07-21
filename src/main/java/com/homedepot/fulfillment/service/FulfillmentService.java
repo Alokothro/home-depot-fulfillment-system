@@ -2,6 +2,7 @@ package com.homedepot.fulfillment.service;
 
 import com.homedepot.fulfillment.dto.OrderPickListResponse;
 import com.homedepot.fulfillment.dto.PickListResponse;
+import com.homedepot.fulfillment.dto.PickProgressRequest;
 import com.homedepot.fulfillment.dto.ShipmentRequest;
 import com.homedepot.fulfillment.entity.*;
 import com.homedepot.fulfillment.exception.InvalidOrderStatusException;
@@ -99,6 +100,7 @@ public class FulfillmentService {
                 .department(product.getDepartment())
                 .location(product.getWarehouseLocation())
                 .quantity(item.getQuantity())
+                .pickedQuantity(item.getPickedQuantity() != null ? item.getPickedQuantity() : 0)
                 .build());
         }
 
@@ -117,6 +119,24 @@ public class FulfillmentService {
             .totalItems(totalItems)
             .lines(lines)
             .build();
+    }
+
+    /**
+     * Save per-item pick progress so it survives a back-out and re-open.
+     */
+    public void savePickProgress(@NonNull Long orderId, @NonNull PickProgressRequest request) {
+        logger.info("Saving pick progress for order {}", orderId);
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        for (PickProgressRequest.ItemUpdate update : request.getItems()) {
+            order.getOrderItems().stream()
+                .filter(item -> item.getProduct().getProductId().equals(update.getProductId()))
+                .findFirst()
+                .ifPresent(item -> item.setPickedQuantity(
+                    Math.min(update.getPickedQuantity(), item.getQuantity())));
+        }
+        orderRepository.save(order);
     }
 
     /**
@@ -145,14 +165,14 @@ public class FulfillmentService {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        // Validate order is in PROCESSING status
-        if (order.getOrderStatus() != OrderStatus.PROCESSING) {
-            // If PENDING, move to PROCESSING first
-            if (order.getOrderStatus() == OrderStatus.PENDING) {
+        // Accept PENDING, PROCESSING, or PARTIAL as valid starting statuses
+        OrderStatus current = order.getOrderStatus();
+        if (current != OrderStatus.PROCESSING && current != OrderStatus.PARTIAL) {
+            if (current == OrderStatus.PENDING) {
                 order.setOrderStatus(OrderStatus.PROCESSING);
             } else {
                 throw new InvalidOrderStatusException(
-                    "Cannot pack order in status: " + order.getOrderStatus());
+                    "Cannot pack order in status: " + current);
             }
         }
 

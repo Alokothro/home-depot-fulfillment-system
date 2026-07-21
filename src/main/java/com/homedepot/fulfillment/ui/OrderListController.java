@@ -11,7 +11,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -130,9 +129,7 @@ public class OrderListController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/landing.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) timeLabel.getScene().getWindow();
-            Scene scene = new Scene(root, 1400, 900);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
+            stage.getScene().setRoot(root);
             stage.setTitle("Home Depot Order Fulfillment System");
         } catch (IOException e) {
             e.printStackTrace();
@@ -286,13 +283,15 @@ public class OrderListController {
             Label dueChip = makeChip(dueDate, "#f1f5f9", "#475569");
             Label inProg  = makeChip("In Progress", "#dbeafe", "#1e40af");
             row2.getChildren().addAll(itemsChip, dot, dueChip, new Label("  "), inProg);
-        } else if ("PARTIAL".equals(status)) {
-            Label dueChip = makeChip(dueDate, "#f1f5f9", "#475569");
-            Label partial = makeChip("Partial — Shortage", "#fef3c7", "#92400e");
-            row2.getChildren().addAll(itemsChip, dot, dueChip, new Label("  "), partial);
         } else {
             Label dueChip = makeChip(dueDate, "#f1f5f9", "#475569");
             row2.getChildren().addAll(itemsChip, dot, dueChip);
+        }
+
+        // Always show Partial badge when status is PARTIAL, regardless of delivery method
+        if ("PARTIAL".equals(status)) {
+            Label partial = makeChip("Partial", "#fef3c7", "#92400e");
+            row2.getChildren().add(partial);
         }
 
         body.getChildren().addAll(row1, divider, row2);
@@ -302,7 +301,7 @@ public class OrderListController {
         footer.setPadding(new Insets(10, 16, 14, 16));
         footer.setAlignment(Pos.CENTER_RIGHT);
 
-        Button pickBtn = new Button("Start Picking  →");
+        Button pickBtn = new Button("PARTIAL".equals(status) ? "Continue Picking  →" : "Start Picking  →");
         pickBtn.getStyleClass().add("oc-pick-btn");
         pickBtn.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(pickBtn, Priority.ALWAYS);
@@ -399,11 +398,11 @@ public class OrderListController {
         Label title = new Label("All caught up!");
         title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
 
-        Label sub = new Label("No pending orders right now.\nNew customer orders will appear here automatically.");
+        Label sub = new Label("No pending orders. New customer orders will appear here automatically.");
         sub.setStyle("-fx-font-size: 16px; -fx-text-fill: #64748b;");
         sub.setWrapText(true);
         sub.setTextAlignment(TextAlignment.CENTER);
-        sub.setMaxWidth(460);
+        sub.setMaxWidth(600);
 
         VBox box = new VBox(20, icon, title, sub);
         box.setAlignment(Pos.CENTER);
@@ -422,9 +421,7 @@ public class OrderListController {
             Parent root = loader.load();
             PickingController ctrl = loader.getController();
             Stage stage = (Stage) orderGrid.getScene().getWindow();
-            Scene scene = new Scene(root, 1400, 900);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
+            stage.getScene().setRoot(root);
             stage.setTitle("Home Depot - Picking");
             init.accept(ctrl);
         } catch (IOException e) {

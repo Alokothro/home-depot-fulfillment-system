@@ -3,6 +3,7 @@ package com.homedepot.fulfillment.controller;
 import com.homedepot.fulfillment.dto.BatchOrderResponse;
 import com.homedepot.fulfillment.dto.OrderPickListResponse;
 import com.homedepot.fulfillment.dto.PickListResponse;
+import com.homedepot.fulfillment.dto.PickProgressRequest;
 import com.homedepot.fulfillment.dto.ShipmentRequest;
 import com.homedepot.fulfillment.entity.Shipment;
 import com.homedepot.fulfillment.service.BatchOrderService;
@@ -44,6 +45,14 @@ public class FulfillmentController {
     @GetMapping("/order/{orderId}/pick-list")
     public ResponseEntity<OrderPickListResponse> getOrderPickList(@PathVariable Long orderId) {
         return ResponseEntity.ok(fulfillmentService.getOrderPickList(orderId));
+    }
+
+    @Operation(summary = "Save per-item pick progress for an order")
+    @PutMapping("/order/{orderId}/pick-progress")
+    public ResponseEntity<Void> savePickProgress(@PathVariable Long orderId,
+                                                  @RequestBody PickProgressRequest request) {
+        fulfillmentService.savePickProgress(orderId, request);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Mark order as partially fulfilled (shortage)")

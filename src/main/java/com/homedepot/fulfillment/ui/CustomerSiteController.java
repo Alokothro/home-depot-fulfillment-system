@@ -3,7 +3,6 @@ package com.homedepot.fulfillment.ui;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -54,10 +53,7 @@ public class CustomerSiteController {
 
             // Get the current stage and switch scenes
             Stage stage = (Stage) webView.getScene().getWindow();
-            Scene scene = new Scene(root, 1400, 900);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-
-            stage.setScene(scene);
+            stage.getScene().setRoot(root);
             stage.setTitle("Home Depot Order Fulfillment System");
 
         } catch (IOException e) {

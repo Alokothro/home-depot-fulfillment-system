@@ -7,12 +7,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -20,6 +17,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -32,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class PickingController {
 
@@ -42,9 +41,18 @@ public class PickingController {
     @FXML private Label       progressLabel;
     @FXML private Label       scanFeedback;
     @FXML private TextField   scanField;
-    @FXML private VBox        pickItemsContainer;
+    @FXML private VBox        pickItemsContainer;  // "To Pick" items
+    @FXML private VBox        pickedSection;        // hidden header + pickedContainer
+    @FXML private VBox        pickedContainer;      // "Picked" items
     @FXML private Button      completeButton;
     @FXML private ProgressBar progressBar;
+
+    // Partial reason overlay
+    @FXML private StackPane partialOverlay;
+    @FXML private Label     partialSubLabel;
+    @FXML private VBox      partialReasonList;
+    @FXML private Button    partialConfirmBtn;
+    private String selectedReason = null;
 
     private final HttpClient   httpClient   = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -56,6 +64,7 @@ public class PickingController {
     private static final String COL_DONE    = "#16a34a";
 
     private static class PickRow {
+        final long   productId;
         final String sku;
         final String name;
         final int    required;
@@ -66,9 +75,10 @@ public class PickingController {
         Label  badge;
         Button pickBtn;
         Button pickAllBtn;
-        TextField qtyField;   // for "enter quantity" flow
+        TextField qtyField;
 
-        PickRow(String sku, String name, int required) {
+        PickRow(long productId, String sku, String name, int required) {
+            this.productId = productId;
             this.sku = sku; this.name = name; this.required = required;
         }
     }
@@ -96,11 +106,12 @@ public class PickingController {
             orderIdsToPack.add(customer.path("orderId").asLong());
             String cName = customer.path("customerName").asText("");
             for (JsonNode item : customer.path("items")) {
-                addRow(item.path("sku").asText(""),
+                addRow(item.path("productId").asLong(0),
+                       item.path("sku").asText(""),
                        item.path("productName").asText("Item"),
                        item.path("location").asText("—"),
                        item.path("quantity").asInt(1),
-                       cName);
+                       0, cName);
             }
         }
         finishRender();
@@ -113,10 +124,12 @@ public class PickingController {
                 + order.path("totalItems").asInt(0) + " items");
 
         for (JsonNode line : order.path("lines")) {
-            addRow(line.path("sku").asText(""),
+            addRow(line.path("productId").asLong(0),
+                   line.path("sku").asText(""),
                    line.path("productName").asText("Item"),
                    line.path("location").asText("—"),
                    line.path("quantity").asInt(1),
+                   line.path("pickedQuantity").asInt(0),
                    null);
         }
         finishRender();
@@ -124,8 +137,10 @@ public class PickingController {
 
     // ── Card building ─────────────────────────────────────────────────────────
 
-    private void addRow(String sku, String name, String location, int quantity, String customerHint) {
-        PickRow row = new PickRow(sku, name, quantity);
+    private void addRow(long productId, String sku, String name,
+                        String location, int quantity, int alreadyPicked,
+                        String customerHint) {
+        PickRow row = new PickRow(productId, sku, name, quantity);
 
         HBox outer = new HBox(0);
         outer.getStyleClass().add("pick-card");
@@ -140,7 +155,7 @@ public class PickingController {
         body.setStyle("-fx-background-color: white; -fx-background-radius: 0 10 10 0;");
         HBox.setHgrow(body, Priority.ALWAYS);
 
-        // Row 1 ── name + badge
+        // Row 1 — name + badge
         HBox r1 = new HBox(10);
         r1.setAlignment(Pos.CENTER_LEFT);
         Label nameLabel = new Label(name);
@@ -153,7 +168,7 @@ public class PickingController {
                 + " -fx-font-size: 11px; -fx-font-weight: bold;");
         r1.getChildren().addAll(nameLabel, badge);
 
-        // Row 2 ── bin + SKU + optional customer
+        // Row 2 — bin + SKU
         HBox r2 = new HBox(10);
         r2.setAlignment(Pos.CENTER_LEFT);
         Label binLabel = new Label("BIN  " + location);
@@ -170,21 +185,17 @@ public class PickingController {
             r2.getChildren().add(cLabel);
         }
 
-        // Row 3 ── progress + qty field + buttons
+        // Row 3 — progress + qty field + buttons
         HBox r3 = new HBox(8);
         r3.setAlignment(Pos.CENTER_LEFT);
-
         Label progressLbl = new Label("0 / " + quantity + " picked");
         progressLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
-
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Qty field + "Pick N" button
         TextField qtyField = new TextField();
         qtyField.setPromptText("Qty");
-        qtyField.setPrefWidth(60);
-        qtyField.setMaxWidth(60);
+        qtyField.setPrefWidth(60); qtyField.setMaxWidth(60);
         qtyField.setStyle("-fx-font-size: 13px; -fx-padding: 7 8;"
                 + " -fx-background-radius: 7; -fx-border-radius: 7;"
                 + " -fx-border-color: #e2e8f0; -fx-border-width: 1.5;");
@@ -194,9 +205,8 @@ public class PickingController {
                 + " -fx-background-radius: 7; -fx-font-weight: bold;"
                 + " -fx-font-size: 13px; -fx-padding: 8 16; -fx-cursor: hand;");
         pickNBtn.setOnAction(e -> { handlePickN(row); scanField.requestFocus(); });
-        qtyField.setOnAction(e -> { handlePickN(row); scanField.requestFocus(); });
+        qtyField.setOnAction(e  -> { handlePickN(row); scanField.requestFocus(); });
 
-        // Pick All (only when qty > 1)
         Button pickAllBtn = null;
         if (quantity > 1) {
             pickAllBtn = new Button("Pick All (" + quantity + ")");
@@ -207,7 +217,6 @@ public class PickingController {
             pickAllBtn.setOnAction(e -> { pickAll(row); scanField.requestFocus(); });
         }
 
-        // Pick 1
         Button pickBtn = new Button("Pick 1");
         pickBtn.setStyle("-fx-background-color: #f97316; -fx-text-fill: white;"
                 + " -fx-background-radius: 7; -fx-font-weight: bold;"
@@ -221,15 +230,37 @@ public class PickingController {
         body.getChildren().addAll(r1, r2, r3);
         outer.getChildren().addAll(strip, body);
 
-        row.outerCard   = outer;
-        row.strip       = strip;
+        row.outerCard  = outer;
+        row.strip      = strip;
         row.progressLbl = progressLbl;
-        row.badge       = badge;
-        row.pickBtn     = pickBtn;
-        row.pickAllBtn  = pickAllBtn;
-        row.qtyField    = qtyField;
+        row.badge      = badge;
+        row.pickBtn    = pickBtn;
+        row.pickAllBtn = pickAllBtn;
+        row.qtyField   = qtyField;
         rows.add(row);
-        pickItemsContainer.getChildren().add(outer);
+
+        if (alreadyPicked > 0) {
+            // Restore persisted pick state
+            row.picked = alreadyPicked;
+            row.progressLbl.setText(row.picked + " / " + row.required + " picked");
+            if (row.picked >= row.required) {
+                // Fully done — put straight into Picked section
+                markRowDoneVisuals(row);
+                pickedContainer.getChildren().add(outer);
+                pickedSection.setVisible(true);
+                pickedSection.setManaged(true);
+            } else {
+                // Partially done — show in To Pick with amber state
+                row.badge.setText(row.picked + "/" + row.required + " picked");
+                row.badge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #92400e;"
+                        + " -fx-background-radius: 20; -fx-padding: 3 10;"
+                        + " -fx-font-size: 11px; -fx-font-weight: bold;");
+                row.strip.setStyle("-fx-background-color: #f59e0b; -fx-background-radius: 10 0 0 10;");
+                pickItemsContainer.getChildren().add(outer);
+            }
+        } else {
+            pickItemsContainer.getChildren().add(outer);
+        }
     }
 
     private void finishRender() {
@@ -284,21 +315,13 @@ public class PickingController {
         String text = row.qtyField.getText() == null ? "" : row.qtyField.getText().trim();
         row.qtyField.clear();
         if (text.isEmpty()) return;
-
         int qty;
-        try {
-            qty = Integer.parseInt(text);
-        } catch (NumberFormatException e) {
-            showFeedback("Enter a whole number in the quantity field.", false);
-            return;
-        }
+        try { qty = Integer.parseInt(text); }
+        catch (NumberFormatException e) { showFeedback("Enter a whole number.", false); return; }
         if (qty <= 0) { showFeedback("Quantity must be greater than 0.", false); return; }
 
         int remaining = row.required - row.picked;
-        if (qty > remaining) {
-            showFeedback("Only " + remaining + " more needed for " + row.name + ". Adjusted.", true);
-            qty = remaining;
-        }
+        if (qty > remaining) { qty = remaining; }
 
         row.picked += qty;
         row.progressLbl.setText(row.picked + " / " + row.required + " picked");
@@ -307,25 +330,24 @@ public class PickingController {
             markRowDone(row);
             showFeedback("Picked all " + row.required + " × " + row.name, true);
         } else {
-            // Partially picked this line — update badge to show progress
             row.badge.setText(row.picked + "/" + row.required + " picked");
             row.badge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #92400e;"
                     + " -fx-background-radius: 20; -fx-padding: 3 10;"
                     + " -fx-font-size: 11px; -fx-font-weight: bold;");
             row.strip.setStyle("-fx-background-color: #f59e0b; -fx-background-radius: 10 0 0 10;");
             showFeedback("Picked " + qty + " of " + row.required + " × " + row.name
-                    + "  (" + (row.required - row.picked) + " short)", true);
+                    + "  (" + (row.required - row.picked) + " still needed)", true);
         }
         updateProgress();
     }
 
-    private void markRowDone(PickRow row) {
+    /** Apply done visuals without moving the card (used during restore). */
+    private void markRowDoneVisuals(PickRow row) {
         row.strip.setStyle("-fx-background-color: " + COL_DONE + "; -fx-background-radius: 10 0 0 10;");
         row.badge.setText("✓ PICKED");
         row.badge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #15803d;"
                 + " -fx-background-radius: 20; -fx-padding: 3 10;"
                 + " -fx-font-size: 11px; -fx-font-weight: bold;");
-        row.outerCard.setStyle("-fx-effect: dropshadow(gaussian, rgba(22,163,74,0.15), 10, 0, 0, 2);");
         row.pickBtn.setDisable(true);
         row.pickBtn.setText("Done");
         row.pickBtn.setStyle("-fx-background-color: #86efac; -fx-text-fill: white;"
@@ -335,24 +357,36 @@ public class PickingController {
         row.qtyField.setDisable(true);
     }
 
+    /** Apply done visuals AND move the card from To Pick → Picked section. */
+    private void markRowDone(PickRow row) {
+        markRowDoneVisuals(row);
+        row.outerCard.setStyle("-fx-effect: dropshadow(gaussian, rgba(22,163,74,0.1), 8, 0, 0, 2);");
+
+        // Move card
+        pickItemsContainer.getChildren().remove(row.outerCard);
+        pickedContainer.getChildren().add(row.outerCard);
+
+        // Show Picked section if first done item
+        if (!pickedSection.isVisible()) {
+            pickedSection.setVisible(true);
+            pickedSection.setManaged(true);
+        }
+
+        // Save this item's progress to the backend immediately
+        saveSingleItemProgress(row);
+    }
+
     private void updateProgress() {
         int picked = rows.stream().mapToInt(r -> r.picked).sum();
         int total  = rows.stream().mapToInt(r -> r.required).sum();
         progressLabel.setText(picked + " / " + total + " picked");
         progressBar.setProgress(total > 0 ? (double) picked / total : 0);
 
-        boolean allDone    = total > 0 && picked >= total;
-        boolean somePickedNotAll = picked > 0 && !allDone;
-
+        boolean allDone = total > 0 && picked >= total;
         if (allDone) {
             completeButton.setDisable(false);
             completeButton.setText("Complete Pick & Pack");
             completeButton.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white;"
-                    + " -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;");
-        } else if (somePickedNotAll) {
-            completeButton.setDisable(false);
-            completeButton.setText("Complete as Partial  (" + picked + " / " + total + ")");
-            completeButton.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white;"
                     + " -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;");
         } else {
             completeButton.setDisable(true);
@@ -367,26 +401,48 @@ public class PickingController {
         scanFeedback.getStyleClass().add(success ? "pick-scan-ok" : "pick-scan-err");
     }
 
+    // ── Save progress to backend ──────────────────────────────────────────────
+
+    /** Save a single fully-picked item immediately. */
+    private void saveSingleItemProgress(PickRow row) {
+        for (Long orderId : orderIdsToPack) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String body = String.format(
+                        "{\"items\":[{\"productId\":%d,\"pickedQuantity\":%d}]}",
+                        row.productId, row.picked);
+                    httpPutWithBody("/api/fulfillment/order/" + orderId + "/pick-progress", body);
+                } catch (Exception ignored) {}
+            });
+        }
+    }
+
+    /** Save the full current state of all rows (used before saving as partial). */
+    private void saveAllProgress() {
+        String items = rows.stream()
+            .filter(r -> r.picked > 0)
+            .map(r -> String.format("{\"productId\":%d,\"pickedQuantity\":%d}", r.productId, r.picked))
+            .collect(Collectors.joining(","));
+        if (items.isEmpty()) return;
+
+        String body = "{\"items\":[" + items + "]}";
+        for (Long orderId : orderIdsToPack) {
+            try { httpPutWithBody("/api/fulfillment/order/" + orderId + "/pick-progress", body); }
+            catch (Exception ignored) {}
+        }
+    }
+
     // ── Complete / Back ───────────────────────────────────────────────────────
 
     @FXML
     private void onComplete() {
-        int picked = rows.stream().mapToInt(r -> r.picked).sum();
-        int total  = rows.stream().mapToInt(r -> r.required).sum();
-        boolean isPartial = picked < total;
-
         completeButton.setDisable(true);
-        completeButton.setText(isPartial ? "Saving partial…" : "Packing…");
-
+        completeButton.setText("Packing…");
         CompletableFuture.runAsync(() -> {
-            String endpoint = isPartial ? "/api/fulfillment/partial/" : "/api/fulfillment/pack/";
-            for (Long orderId : orderIdsToPack) httpPut(endpoint + orderId);
+            for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/pack/" + orderId);
         }).thenRun(() -> Platform.runLater(this::goToOrderList))
           .exceptionally(e -> {
-              Platform.runLater(() -> {
-                  showFeedback("Failed: " + e.getMessage(), false);
-                  updateProgress(); // re-enable button
-              });
+              Platform.runLater(() -> { showFeedback("Failed: " + e.getMessage(), false); updateProgress(); });
               return null;
           });
     }
@@ -395,31 +451,80 @@ public class PickingController {
     private void onBackClick(MouseEvent event) {
         int picked = rows.stream().mapToInt(r -> r.picked).sum();
         int total  = rows.stream().mapToInt(r -> r.required).sum();
-
         if (picked > 0 && picked < total) {
-            // Some picks done — ask what to do
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Save Progress");
-            alert.setHeaderText("You've picked " + picked + " of " + total + " items");
-            alert.setContentText("Save this as a partial order (shortage will be flagged for customer service)?");
-
-            ButtonType savePartial  = new ButtonType("Save as Partial");
-            ButtonType discardBack  = new ButtonType("Discard & Go Back");
-            ButtonType cancelReturn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-            alert.getButtonTypes().setAll(savePartial, discardBack, cancelReturn);
-
-            alert.showAndWait().ifPresent(result -> {
-                if (result == savePartial) {
-                    for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/partial/" + orderId);
-                    goToOrderList();
-                } else if (result == discardBack) {
-                    goToOrderList();
-                }
-                // cancel → stay on picking screen
-            });
+            showPartialReasonDialog(picked, total);
         } else {
             goToOrderList();
         }
+    }
+
+    // ── Partial reason overlay ────────────────────────────────────────────────
+
+    private void showPartialReasonDialog(int picked, int total) {
+        partialSubLabel.setText("You picked " + picked + " of " + total + " items — select a reason:");
+        partialReasonList.getChildren().clear();
+        selectedReason = null;
+        partialConfirmBtn.setDisable(true);
+
+        String[][] reasons = {
+            {"shortage",    "Item Shortage",       "Not enough stock on the shelf"},
+            {"not_found",   "Item Not Found",      "Could not locate the item in the store"},
+            {"unavailable", "Item Unavailable",    "Damaged, recalled, or restricted"},
+            {"oversize",    "Oversize / Too Heavy","Cannot be safely transported"},
+            {"other",       "Other",               "Customer service will review"}
+        };
+        for (String[] r : reasons)
+            partialReasonList.getChildren().add(buildReasonOption(r[0], r[1], r[2]));
+        partialOverlay.setVisible(true);
+    }
+
+    private VBox buildReasonOption(String key, String title, String desc) {
+        Label titleLbl = new Label(title);
+        titleLbl.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
+        Label descLbl = new Label(desc);
+        descLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #94a3b8;");
+        VBox box = new VBox(3, titleLbl, descLbl);
+        box.setCursor(Cursor.HAND);
+        box.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0;"
+                + " -fx-border-width: 1.5; -fx-border-radius: 10;"
+                + " -fx-background-radius: 10; -fx-padding: 14 16;");
+        box.setOnMouseClicked(e -> selectReason(key, box, titleLbl));
+        return box;
+    }
+
+    private void selectReason(String key, VBox selected, Label titleLbl) {
+        partialReasonList.getChildren().forEach(node -> {
+            node.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0;"
+                    + " -fx-border-width: 1.5; -fx-border-radius: 10;"
+                    + " -fx-background-radius: 10; -fx-padding: 14 16;");
+            if (node instanceof VBox vb && !vb.getChildren().isEmpty())
+                ((Label) vb.getChildren().get(0)).setStyle(
+                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
+        });
+        selected.setStyle("-fx-background-color: #fff7ed; -fx-border-color: #f97316;"
+                + " -fx-border-width: 2; -fx-border-radius: 10;"
+                + " -fx-background-radius: 10; -fx-padding: 14 16;");
+        titleLbl.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #c2410c;");
+        selectedReason = key;
+        partialConfirmBtn.setDisable(false);
+    }
+
+    @FXML private void onPartialConfirm() {
+        if (selectedReason == null) return;
+        partialOverlay.setVisible(false);
+        saveAllProgress();
+        for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/partial/" + orderId);
+        goToOrderList();
+    }
+
+    @FXML private void onPartialDiscard() {
+        partialOverlay.setVisible(false);
+        goToOrderList();
+    }
+
+    @FXML private void onPartialCancel() {
+        partialOverlay.setVisible(false);
+        selectedReason = null;
     }
 
     private void goToOrderList() {
@@ -427,9 +532,7 @@ public class PickingController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/order-list.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) scanField.getScene().getWindow();
-            Scene scene = new Scene(root, 1400, 900);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
+            stage.getScene().setRoot(root);
             stage.setTitle("Home Depot - Store Fulfillment");
         } catch (Exception e) {
             showFeedback("Failed to return: " + e.getMessage(), false);
@@ -441,8 +544,7 @@ public class PickingController {
     private JsonNode httpGetNode(String path) {
         try {
             HttpRequest req = HttpRequest.newBuilder().uri(URI.create(BASE_URL + path)).GET().build();
-            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
-            return objectMapper.readTree(resp.body());
+            return objectMapper.readTree(httpClient.send(req, HttpResponse.BodyHandlers.ofString()).body());
         } catch (Exception e) { throw new RuntimeException(e.getMessage(), e); }
     }
 
@@ -454,6 +556,16 @@ public class PickingController {
             HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() >= 300)
                 throw new RuntimeException("HTTP " + resp.statusCode() + ": " + resp.body());
+        } catch (Exception e) { throw new RuntimeException(e.getMessage(), e); }
+    }
+
+    private void httpPutWithBody(String path, String jsonBody) {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + path))
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(jsonBody)).build();
+            httpClient.send(req, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) { throw new RuntimeException(e.getMessage(), e); }
     }
 }

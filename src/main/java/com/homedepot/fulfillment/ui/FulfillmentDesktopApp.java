@@ -45,6 +45,7 @@ public class FulfillmentDesktopApp extends Application {
 
             // Configure stage
             stage.setTitle("Home Depot Order Fulfillment System");
+            stage.setFullScreenExitHint("");  // suppress the "Press Esc" banner
             stage.setScene(scene);
 
             // Add application icon if available

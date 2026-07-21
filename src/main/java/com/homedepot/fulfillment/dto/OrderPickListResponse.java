@@ -36,5 +36,6 @@ public class OrderPickListResponse {
         private String department;
         private String location;
         private int quantity;
+        private int pickedQuantity;
     }
 }

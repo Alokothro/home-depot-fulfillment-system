@@ -506,3 +506,112 @@
     -fx-opacity: 1;
     -fx-cursor: default;
 }
+
+/* Picked section divider */
+.picked-section-header {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #bbf7d0;
+    -fx-border-width: 1 0 1 0;
+    -fx-padding: 10 16;
+}
+
+.picked-section-title {
+    -fx-text-fill: #15803d;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* ==================== PARTIAL REASON OVERLAY ==================== */
+.partial-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.58);
+}
+
+.partial-dialog {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 40, 0, 0, 8);
+}
+
+.partial-dialog-header {
+    -fx-background-color: linear-gradient(to right, #111827, #1e293b);
+    -fx-background-radius: 14 14 0 0;
+    -fx-padding: 22 24 20 24;
+}
+
+.partial-dialog-title {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.partial-dialog-sub {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+}
+
+.partial-reason-list {
+    -fx-background-color: #f8fafc;
+    -fx-padding: 20 20 8 20;
+}
+
+.partial-dialog-footer {
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 14 14;
+    -fx-border-color: #f1f5f9;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 14 20;
+    -fx-spacing: 10;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.partial-btn-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-padding: 9 16;
+    -fx-background-radius: 7;
+}
+
+.partial-btn-cancel:hover {
+    -fx-background-color: #f1f5f9;
+}
+
+.partial-btn-discard {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-padding: 9 16;
+}
+
+.partial-btn-discard:hover {
+    -fx-border-color: #94a3b8;
+    -fx-text-fill: #374151;
+}
+
+.partial-btn-confirm {
+    -fx-background-color: #f97316;
+    -fx-text-fill: white;
+    -fx-background-radius: 7;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 9 20;
+}
+
+.partial-btn-confirm:hover {
+    -fx-background-color: #ea580c;
+}
+
+.partial-btn-confirm:disabled {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #94a3b8;
+    -fx-opacity: 1;
+    -fx-cursor: default;
+}
