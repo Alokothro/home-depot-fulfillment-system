@@ -21,7 +21,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -169,7 +168,9 @@ public class OrderListController {
                 VBox card = batched ? createBatchCard(order) : createOrderCard(order);
                 orderGrid.getChildren().add(card);
                 count++;
-                totalItems.addAndGet(order.path("totalItems").asInt(0));
+                // Use remainingItems so partial orders count only what's still to pick
+                int tot = order.path("totalItems").asInt(0);
+                totalItems.addAndGet(order.path("remainingItems").asInt(tot));
             }
 
             if (count == 0) {
@@ -195,10 +196,11 @@ public class OrderListController {
         String customerName  = order.path("customerName").asText("Customer");
         String orderNumber   = order.path("orderNumber").asText("Order");
         String shipping      = order.path("shippingMethod").asText("Standard");
-        int    totalItems    = order.path("totalItems").asInt(0);
-        String dueDate       = order.path("dueDate").asText("Due soon");
-        String status        = order.path("status").asText("PENDING");
-        long   orderId       = order.path("orderId").asLong(0);
+        int    totalItems     = order.path("totalItems").asInt(0);
+        int    remainingItems = order.path("remainingItems").asInt(totalItems); // falls back to total for non-partial
+        String dueDate        = order.path("dueDate").asText("Due soon");
+        String status         = order.path("status").asText("PENDING");
+        long   orderId        = order.path("orderId").asLong(0);
 
         String accentColor  = cardAccentColor(shipping, status);
         String badgeBg      = deliveryBadgeBg(shipping);
@@ -255,7 +257,7 @@ public class OrderListController {
         row2.setAlignment(Pos.CENTER_LEFT);
         row2.setPadding(new Insets(0, 0, 2, 0));
 
-        Label itemsChip = makeChip(totalItems + (totalItems == 1 ? " item" : " items") + " to pick", "#f1f5f9", "#475569");
+        Label itemsChip = makeChip(remainingItems + (remainingItems == 1 ? " item" : " items") + " to pick", "#f1f5f9", "#475569");
         Label dot = new Label("•");
         dot.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 14px;");
 
@@ -398,13 +400,7 @@ public class OrderListController {
         Label title = new Label("All caught up!");
         title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
 
-        Label sub = new Label("No pending orders. New customer orders will appear here automatically.");
-        sub.setStyle("-fx-font-size: 16px; -fx-text-fill: #64748b;");
-        sub.setWrapText(true);
-        sub.setTextAlignment(TextAlignment.CENTER);
-        sub.setMaxWidth(600);
-
-        VBox box = new VBox(20, icon, title, sub);
+        VBox box = new VBox(20, icon, title);
         box.setAlignment(Pos.CENTER);
 
         StackPane stack = new StackPane(box);

@@ -68,6 +68,7 @@ public class PickingController {
         final String sku;
         final String name;
         final int    required;
+        final int    originalPicked; // pickedQuantity when the order was opened — used for discard
         int    picked = 0;
         HBox   outerCard;
         Region strip;
@@ -77,9 +78,10 @@ public class PickingController {
         Button pickAllBtn;
         TextField qtyField;
 
-        PickRow(long productId, String sku, String name, int required) {
+        PickRow(long productId, String sku, String name, int required, int originalPicked) {
             this.productId = productId;
             this.sku = sku; this.name = name; this.required = required;
+            this.originalPicked = originalPicked;
         }
     }
 
@@ -140,7 +142,7 @@ public class PickingController {
     private void addRow(long productId, String sku, String name,
                         String location, int quantity, int alreadyPicked,
                         String customerHint) {
-        PickRow row = new PickRow(productId, sku, name, quantity);
+        PickRow row = new PickRow(productId, sku, name, quantity, alreadyPicked);
 
         HBox outer = new HBox(0);
         outer.getStyleClass().add("pick-card");
@@ -221,7 +223,15 @@ public class PickingController {
         pickBtn.setStyle("-fx-background-color: #f97316; -fx-text-fill: white;"
                 + " -fx-background-radius: 7; -fx-font-weight: bold;"
                 + " -fx-font-size: 13px; -fx-padding: 8 20; -fx-cursor: hand;");
-        pickBtn.setOnAction(e -> { pickOne(row); scanField.requestFocus(); });
+        pickBtn.setOnAction(e -> {
+            pickOne(row);
+            if (row.picked >= row.required) {
+                showFeedback("✓ All " + row.required + " × " + row.name + " picked!", true);
+            } else {
+                showFeedback("Picked 1 × " + row.name + "  —  " + (row.required - row.picked) + " still needed", true);
+            }
+            scanField.requestFocus();
+        });
 
         r3.getChildren().addAll(progressLbl, spacer, qtyField, pickNBtn);
         if (pickAllBtn != null) r3.getChildren().add(pickAllBtn);
@@ -284,11 +294,16 @@ public class PickingController {
         }
         if (match == null) {
             boolean known = rows.stream().anyMatch(r -> r.sku.equalsIgnoreCase(code));
-            showFeedback(known ? "\"" + code + "\" is already fully picked."
-                               : "\"" + code + "\" is not in this order.", false);
+            showFeedback(known ? "✓ " + code + " is already fully picked."
+                               : code + " is not in this order — double-check the SKU.", false);
         } else {
             pickOne(match);
-            showFeedback("Picked " + match.name + "  (" + match.picked + "/" + match.required + ")", true);
+            if (match.picked >= match.required) {
+                showFeedback("✓ All " + match.required + " × " + match.name + " picked!", true);
+            } else {
+                showFeedback("Picked 1 × " + match.name
+                        + "  —  " + (match.required - match.picked) + " still needed", true);
+            }
         }
         scanField.requestFocus();
     }
@@ -296,7 +311,7 @@ public class PickingController {
     private void pickOne(PickRow row) {
         if (row.picked >= row.required) return;
         row.picked++;
-        row.progressLbl.setText(row.picked + " / " + row.required + " picked");
+        syncRowDisplay(row);
         if (row.picked >= row.required) markRowDone(row);
         updateProgress();
     }
@@ -305,40 +320,69 @@ public class PickingController {
         if (row.picked >= row.required) return;
         int n = row.required - row.picked;
         row.picked = row.required;
-        row.progressLbl.setText(row.picked + " / " + row.required + " picked");
+        syncRowDisplay(row);
         markRowDone(row);
         showFeedback("Picked all " + n + " × " + row.name, true);
         updateProgress();
     }
 
     private void handlePickN(PickRow row) {
-        String text = row.qtyField.getText() == null ? "" : row.qtyField.getText().trim();
+        String raw = row.qtyField.getText() == null ? "" : row.qtyField.getText().trim();
         row.qtyField.clear();
-        if (text.isEmpty()) return;
+        if (raw.isEmpty()) { showFeedback("Enter a quantity in the Qty field first.", false); return; }
+
+        // Strip any accidental decimal (e.g. "8.0" → "8")
+        raw = raw.contains(".") ? raw.substring(0, raw.indexOf('.')) : raw;
         int qty;
-        try { qty = Integer.parseInt(text); }
-        catch (NumberFormatException e) { showFeedback("Enter a whole number.", false); return; }
-        if (qty <= 0) { showFeedback("Quantity must be greater than 0.", false); return; }
+        try { qty = Integer.parseInt(raw); }
+        catch (NumberFormatException e) { showFeedback("Enter a whole number (e.g. 8).", false); return; }
+        if (qty <= 0) { showFeedback("Quantity must be at least 1.", false); return; }
 
         int remaining = row.required - row.picked;
-        if (qty > remaining) { qty = remaining; }
+        if (remaining <= 0) { showFeedback(row.name + " is already fully picked.", false); return; }
+
+        boolean clamped = qty > remaining;
+        if (clamped) qty = remaining;
 
         row.picked += qty;
-        row.progressLbl.setText(row.picked + " / " + row.required + " picked");
+        syncRowDisplay(row);
 
         if (row.picked >= row.required) {
             markRowDone(row);
             showFeedback("Picked all " + row.required + " × " + row.name, true);
         } else {
+            setPartialStyle(row);
+            String clampNote = clamped ? " (adjusted — only " + qty + " needed)" : "";
+            showFeedback("Picked " + qty + " × " + row.name
+                    + "  —  " + (row.required - row.picked) + " still needed" + clampNote, true);
+        }
+        updateProgress();
+    }
+
+    /**
+     * Sync the progress label and Pick All button text to reflect current row.picked.
+     * Called after every pick action before checking for completion.
+     */
+    private void syncRowDisplay(PickRow row) {
+        row.progressLbl.setText(row.picked + " / " + row.required + " picked");
+        // Keep badge in sync when partially picked
+        if (row.picked > 0 && row.picked < row.required) {
             row.badge.setText(row.picked + "/" + row.required + " picked");
             row.badge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #92400e;"
                     + " -fx-background-radius: 20; -fx-padding: 3 10;"
                     + " -fx-font-size: 11px; -fx-font-weight: bold;");
             row.strip.setStyle("-fx-background-color: #f59e0b; -fx-background-radius: 10 0 0 10;");
-            showFeedback("Picked " + qty + " of " + row.required + " × " + row.name
-                    + "  (" + (row.required - row.picked) + " still needed)", true);
         }
-        updateProgress();
+        // Update Pick All button to show how many are left
+        if (row.pickAllBtn != null && !row.pickAllBtn.isDisabled()) {
+            int left = row.required - row.picked;
+            row.pickAllBtn.setText(left > 0 ? "Pick All (" + left + ")" : "Done");
+        }
+    }
+
+    /** Apply amber partial styling (called from handlePickN for partial result). */
+    private void setPartialStyle(PickRow row) {
+        // syncRowDisplay already handled badge and strip; nothing extra needed
     }
 
     /** Apply done visuals without moving the card (used during restore). */
@@ -451,11 +495,38 @@ public class PickingController {
     private void onBackClick(MouseEvent event) {
         int picked = rows.stream().mapToInt(r -> r.picked).sum();
         int total  = rows.stream().mapToInt(r -> r.required).sum();
-        if (picked > 0 && picked < total) {
+
+        if (total > 0 && picked >= total) {
+            // All items fully picked — prompt to complete rather than leave it stuck
+            showAllPickedDialog();
+        } else if (picked > 0 && picked < total) {
+            // Some picked but not all — partial reason dialog
             showPartialReasonDialog(picked, total);
         } else {
+            // Nothing picked yet — just go back, nothing to undo
             goToOrderList();
         }
+    }
+
+    private void showAllPickedDialog() {
+        // Reuse the overlay header — update title dynamically via subLabel
+        partialSubLabel.setText("All " + rows.stream().mapToInt(r -> r.required).sum()
+                + " items picked. Complete the order now or go back to finish later.");
+        partialReasonList.getChildren().clear();
+        selectedReason = null;
+
+        // Reuse the overlay but with a simple message instead of reason buttons
+        Label msg = new Label("Press \"Complete & Pack\" to finish the order,\nor go back to complete it later.");
+        msg.setStyle("-fx-font-size: 14px; -fx-text-fill: #475569; -fx-wrap-text: true;");
+        msg.setWrapText(true);
+        partialReasonList.getChildren().add(msg);
+
+        // Swap button labels for this context
+        partialConfirmBtn.setText("Complete & Pack");
+        partialConfirmBtn.setDisable(false); // no reason selection needed
+        selectedReason = "__complete__";     // sentinel so onPartialConfirm knows what to do
+
+        partialOverlay.setVisible(true);
     }
 
     // ── Partial reason overlay ────────────────────────────────────────────────
@@ -512,18 +583,53 @@ public class PickingController {
     @FXML private void onPartialConfirm() {
         if (selectedReason == null) return;
         partialOverlay.setVisible(false);
-        saveAllProgress();
-        for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/partial/" + orderId);
-        goToOrderList();
+        resetOverlayButtons();
+
+        if ("__complete__".equals(selectedReason)) {
+            // Pack the order then return to list
+            completeButton.setDisable(true);
+            completeButton.setText("Packing…");
+            CompletableFuture.runAsync(() -> {
+                for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/pack/" + orderId);
+            }).thenRun(() -> Platform.runLater(this::goToOrderList))
+              .exceptionally(e -> {
+                  Platform.runLater(() -> {
+                      showFeedback("Failed to pack: " + e.getMessage(), false);
+                      updateProgress();
+                  });
+                  return null;
+              });
+        } else {
+            // Save as partial with selected reason
+            saveAllProgress();
+            for (Long orderId : orderIdsToPack) httpPut("/api/fulfillment/partial/" + orderId);
+            goToOrderList();
+        }
+    }
+
+    private void resetOverlayButtons() {
+        partialConfirmBtn.setText("Save as Partial");
+        partialConfirmBtn.setDisable(true);
     }
 
     @FXML private void onPartialDiscard() {
         partialOverlay.setVisible(false);
+        resetOverlayButtons();
+        // Restore every item to the pick state it had when this session opened
+        String items = rows.stream()
+            .map(r -> String.format("{\"productId\":%d,\"pickedQuantity\":%d}", r.productId, r.originalPicked))
+            .collect(Collectors.joining(","));
+        String body = "{\"items\":[" + items + "]}";
+        for (Long orderId : orderIdsToPack) {
+            try { httpPutWithBody("/api/fulfillment/order/" + orderId + "/pick-progress", body); }
+            catch (Exception ignored) {}
+        }
         goToOrderList();
     }
 
     @FXML private void onPartialCancel() {
         partialOverlay.setVisible(false);
+        resetOverlayButtons();
         selectedReason = null;
     }
 

@@ -173,6 +173,12 @@ public class BatchOrderService {
 
         int totalItems = items.stream().mapToInt(OrderItem::getQuantity).sum();
 
+        // Remaining = total minus what's already been picked (relevant for PARTIAL orders)
+        int remainingItems = items.stream()
+                .mapToInt(item -> Math.max(0, item.getQuantity()
+                        - (item.getPickedQuantity() != null ? item.getPickedQuantity() : 0)))
+                .sum();
+
         // Format: HD-YYYYMMDD-NNNNN — unique, scannable, lookup-able
         String orderDate = order.getOrderDate() != null
                 ? order.getOrderDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
@@ -191,6 +197,7 @@ public class BatchOrderService {
                 .dueDate(formatDueDate(order.getOrderDate()))
                 .department(primaryDepartment)
                 .totalItems(totalItems)
+                .remainingItems(remainingItems)
                 .orderDateIso(orderDateIso)
                 .build();
     }
