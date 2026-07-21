@@ -58,8 +58,13 @@ function setupEventListeners() {
     document.getElementById('cartBtn').addEventListener('click', openCart);
     document.getElementById('closeCart').addEventListener('click', closeCart);
 
-    // Checkout button
+    // Checkout button → opens delivery selection
     document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
+
+    // Delivery modal
+    document.getElementById('closeDelivery').addEventListener('click', closeDeliveryModal);
+    document.getElementById('placeOrderBtn').addEventListener('click', handlePlaceOrder);
+    document.getElementById('optBopis').addEventListener('click', () => selectDelivery(document.getElementById('optBopis')));
 
     // Order confirmation close
     document.getElementById('confirmCloseBtn').addEventListener('click', () => {
@@ -200,9 +205,10 @@ function renderProducts() {
     grid.innerHTML = state.filteredProducts.map(product => `
         <div class="product-card">
             <div class="product-image">
-                <span class="product-image-fallback">${getProductIcon(product.department)}</span>
                 <img class="product-photo" src="${getImageUrl(product)}" alt="${product.name}"
-                     loading="lazy" onload="this.classList.add('loaded')" onerror="this.remove()">
+                     loading="lazy" onload="this.classList.add('loaded')"
+                     onerror="this.style.display='none';this.previousElementSibling.style.display='block'">
+                <span class="product-image-fallback" style="display:none">${getProductIcon(product.department)}</span>
             </div>
             <div class="product-info">
                 <div class="product-department">${product.department}</div>
@@ -509,59 +515,129 @@ function signOut() {
     document.body.classList.add('modal-open');
 }
 
-async function handleCheckout() {
-    if (state.cart.length === 0) return;
+// ---- Big-item detection (drives Van Delivery eligibility) ----
+// Van is required for heavy items (≥50 lbs), all lumber/building materials
+// (too bulky for a car regardless of weight), and large door/window units (≥35 lbs).
+function isBigItem(product) {
+    const weight = product.weight || 0;
+    const dept   = product.department || '';
+    const cat    = product.category || '';
+    if (weight >= 50) return true;
+    if (dept === 'Lumber & Building Materials') return true;
+    if (dept === 'Doors & Windows' && weight >= 35) return true;
+    if (['Lumber', 'Building Materials'].includes(cat)) return true;
+    return false;
+}
 
-    // Not signed in -> send them back through the guest/login gate
-    if (!state.customer) {
-        signOut();
+function cartHasBigItems()  { return state.cart.some(item  => isBigItem(item)); }
+function cartHasOnlyBigItems() { return state.cart.length > 0 && state.cart.every(item => isBigItem(item)); }
+
+// ---- Delivery modal ----
+let selectedDeliveryMethod = null;
+
+function handleCheckout() {
+    if (state.cart.length === 0) return;
+    if (!state.customer) { signOut(); return; }
+    hideCartError();
+    openDeliveryModal();
+}
+
+function openDeliveryModal() {
+    const hasBig   = cartHasBigItems();
+    const onlyBig  = cartHasOnlyBigItems();
+
+    const vanOpt  = document.getElementById('optVan');
+    const carOpt  = document.getElementById('optCar');
+    const vanDesc = document.getElementById('vanDesc');
+
+    // Van: only unlocked when cart has at least one big item
+    if (hasBig) {
+        vanOpt.classList.remove('delivery-option-locked');
+        vanOpt.onclick = () => selectDelivery(vanOpt);
+        vanDesc.textContent = onlyBig
+            ? 'Required for large & heavy items · 2–5 business days · Scheduled delivery window'
+            : 'Required for the large & heavy items in your cart · 2–5 business days';
+    } else {
+        vanOpt.classList.add('delivery-option-locked');
+        vanOpt.onclick = null;
+        vanDesc.textContent = 'Only available for large & heavy items (lumber, doors, heavy appliances)';
+    }
+
+    // Car: locked when cart is ALL big items (no standard items to deliver by car)
+    if (onlyBig) {
+        carOpt.classList.add('delivery-option-locked');
+        carOpt.onclick = null;
+        carOpt.querySelector('.delivery-desc').textContent =
+            'Not available — your cart contains only large items requiring van delivery';
+    } else {
+        carOpt.classList.remove('delivery-option-locked');
+        carOpt.onclick = () => selectDelivery(carOpt);
+        carOpt.querySelector('.delivery-desc').textContent = 'Standard items · 1–3 business days';
+    }
+
+    // Reset selection, then pre-select sensible default
+    selectedDeliveryMethod = null;
+    document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'));
+    document.getElementById('deliveryError').textContent = '';
+    selectDelivery(onlyBig ? vanOpt : document.getElementById('optBopis'));
+
+    closeCart();
+    document.getElementById('deliveryModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function selectDelivery(el) {
+    if (!el || el.classList.contains('delivery-option-locked')) return;
+    document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedDeliveryMethod = el.dataset.method;
+    document.getElementById('deliveryError').textContent = '';
+}
+
+function closeDeliveryModal() {
+    document.getElementById('deliveryModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+async function handlePlaceOrder() {
+    if (!selectedDeliveryMethod) {
+        document.getElementById('deliveryError').textContent = 'Please select a delivery method.';
         return;
     }
 
-    hideCartError();
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    checkoutBtn.disabled = true;
-    checkoutBtn.textContent = 'Placing order…';
+    const btn = document.getElementById('placeOrderBtn');
+    btn.disabled = true;
+    btn.textContent = 'Placing order…';
+    document.getElementById('deliveryError').textContent = '';
 
     try {
-        const orderRequest = {
-            customerId: state.customer.customerId,
-            shippingMethod: 'Standard',
-            items: state.cart.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity
-            }))
-        };
-
         const response = await fetch(`${API_BASE}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderRequest)
+            body: JSON.stringify({
+                customerId: state.customer.customerId,
+                shippingMethod: selectedDeliveryMethod,
+                items: state.cart.map(i => ({ productId: i.productId, quantity: i.quantity }))
+            })
         });
 
         if (!response.ok) {
             let message = 'Failed to place order. Please try again.';
-            try {
-                const err = await response.json();
-                message = err.message || err.error || message;
-            } catch (_) { /* non-JSON error body */ }
+            try { const e = await response.json(); message = e.message || e.error || message; } catch (_) {}
             throw new Error(message);
         }
 
         const order = await response.json();
-
-        // Success: clear cart, close drawer, show confirmation
         state.cart = [];
         updateCartUI();
-        closeCart();
+        closeDeliveryModal();
         showOrderConfirmation(order);
 
     } catch (error) {
-        console.error('Checkout error:', error);
-        showCartError(error.message || 'Failed to place order. Please try again.');
+        document.getElementById('deliveryError').textContent = error.message || 'Failed to place order. Please try again.';
     } finally {
-        checkoutBtn.disabled = false;
-        checkoutBtn.textContent = 'Proceed to Checkout';
+        btn.disabled = false;
+        btn.textContent = 'Confirm & Place Order';
     }
 }
 
@@ -582,6 +658,15 @@ function showOrderConfirmation(order) {
     document.getElementById('confirmDetails').innerHTML =
         `Order <strong>#${order.orderId}</strong> for <strong>${state.customer.firstName} ${state.customer.lastName}</strong>` +
         (total ? `<br>Total: <strong>${total}</strong>` : '');
+
+    const deliveryLabels = {
+        'BOPIS':        '🏪 Ready for pick-up in 2 hours',
+        'Car Delivery': '🚗 Car delivery · 1–3 business days',
+        'Van Delivery': '🚐 Van delivery · 2–5 business days · We\'ll call to schedule'
+    };
+    document.getElementById('confirmDelivery').textContent =
+        deliveryLabels[selectedDeliveryMethod] || selectedDeliveryMethod || '';
+
     document.getElementById('confirmModal').classList.add('active');
     document.body.classList.add('modal-open');
 }

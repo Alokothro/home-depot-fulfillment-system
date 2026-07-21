@@ -36,8 +36,9 @@ public class CustomerSiteController {
 
     private void loadWebsite() {
         try {
-            System.out.println("Loading customer website: " + CUSTOMER_SITE_URL);
-            webView.getEngine().load(CUSTOMER_SITE_URL);
+            // Cache-bust so the WebView always picks up the latest CSS/JS after a restart
+            String url = CUSTOMER_SITE_URL + "?v=" + System.currentTimeMillis();
+            webView.getEngine().load(url);
         } catch (Exception e) {
             e.printStackTrace();
             showError("Failed to load customer website: " + e.getMessage());
